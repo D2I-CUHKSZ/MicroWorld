@@ -1,8 +1,3 @@
-"""Legacy API entrypoint wrapper.
-
-Kept for backward compatibility. Preferred command:
-`uv run mirofish-api`.
-"""
 
 import os
 import sys
