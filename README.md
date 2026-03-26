@@ -249,7 +249,7 @@ python engine.py --mode matrix \
 - [ ] Public benchmark scenarios (financial rumor / election narrative / crisis communication)
 - [ ] Plug-in adapters for Reddit, Discord, and newswire feeds
 - [ ] Reproducible evaluation suite for intervention policy tests
-- [ ] Full offline million-agent deployment tutorial
+- [ ] End-to-end offline million-agent deployment tutorial
 
 <div align="center">
 <img src="https://capsule-render.vercel.app/api?type=waving&color=0:050505,100:00ffcc&height=120&section=footer" width="100%" />
