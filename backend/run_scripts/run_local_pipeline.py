@@ -1,7 +1,7 @@
 """Legacy local pipeline script wrapper.
 
 Kept for backward compatibility. Preferred command:
-`uv run mirofish-local-pipeline ...`
+`uv run lightworld-local-pipeline ...`
 """
 
 import os

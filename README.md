@@ -195,41 +195,57 @@ graph TD
 ## 📦 Quick Start | Boot Protocol
 
 ```bash
-# 1) Access the Matrix
+# 1) Clone
 git clone https://github.com/JayLZhou/LightWorld.git
 cd LightWorld
 
-# 2) Install cybernetic implants
-pip install -r requirements.txt
-playwright install
+# 2) Configure local secrets
+cp .env.example .env
+# Fill in at least: LLM_API_KEY and ZEP_API_KEY
 
-# 3) Ignite the world
-python engine.py --mode matrix \
-  --graph ./data/twitter_seed.json \
-  --video ./data/breaking_news.mp4
+# 3) Install backend dependencies
+cd backend
+uv sync
+
+# 4) Start the API service
+uv run lightworld-api
 ```
 
-### Minimal Graph Seed (`data/twitter_seed.json`)
+### Common Commands
 
-```json
-{
-  "nodes": [
-    {"id": "kol_01", "role": "KOL", "stance": 0.65, "followers": 320000},
-    {"id": "group_a_01", "role": "citizen", "stance": 0.20, "followers": 540},
-    {"id": "bot_01", "role": "bot", "stance": -0.75, "followers": 1200}
-  ],
-  "edges": [
-    {"source": "group_a_01", "target": "kol_01", "type": "follow", "weight": 0.80},
-    {"source": "bot_01", "target": "group_a_01", "type": "repost", "weight": 0.60}
-  ],
-  "events": [
-    {"t": 3, "type": "video_injection", "payload": {"sentiment": -0.4}},
-    {"t": 9, "type": "debunk_release", "payload": {"strength": 0.7}}
-  ]
-}
+```bash
+# Backend API
+cd backend
+uv run lightworld-api
+
+# Local multimodal pipeline
+cd backend
+uv run lightworld-local-pipeline --config /abs/path/to/local_pipeline.json
+
+# Parallel simulation
+cd backend
+uv run lightworld-parallel-sim --config /abs/path/to/simulation_config.json
+
+# Full end-to-end run
+cd backend
+uv run lightworld-full-run --config /abs/path/to/full_run.config.json
 ```
 
-> 💡 **Offline Protocol**: For zero-API-cost local deployment, see `Offline-Deployment-Guide.md`.
+### Required Environment Variables
+
+The repository is safe to publish without secrets. After cloning, create a root `.env` from `.env.example` and set:
+
+- `LLM_API_KEY`
+- `ZEP_API_KEY`
+
+Optional overrides already supported:
+
+- `LLM_BASE_URL`
+- `LLM_MODEL_NAME`
+- `MULTIMODAL_AUDIO_API_KEY`
+- `MULTIMODAL_AUDIO_BASE_URL`
+
+The app loads env vars from repository-root `.env` first, then `backend/.env` as a compatibility fallback.
 
 ---
 

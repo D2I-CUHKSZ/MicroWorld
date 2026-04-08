@@ -7,8 +7,8 @@ standardized package-level command entry.
 import asyncio
 import sys
 
-from scripts.run_parallel_simulation import main as _async_main
-from scripts.run_parallel_simulation import setup_signal_handlers
+from run_scripts.run_parallel_simulation import main as _async_main
+from run_scripts.run_parallel_simulation import setup_signal_handlers
 
 
 def main() -> int:

@@ -199,7 +199,7 @@ class LocalGraphPipeline:
             ProjectManager.save_project(project)
 
             log_step("开始构建图谱（同步）")
-            graph_name = opts.graph_name or project.name or "MiroFish Graph"
+            graph_name = opts.graph_name or project.name or "LightWorld Graph"
             builder = GraphBuilderService(api_key=self.zep_api_key)
 
             chunk_size = opts.chunk_size

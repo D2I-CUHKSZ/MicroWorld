@@ -9,11 +9,12 @@ from collections import defaultdict
 from typing import Callable, Dict, Any, Iterable, List, Optional, Tuple
 
 from ..infrastructure.llm_client import LLMClient
+from ..infrastructure.llm_client_factory import LLMClientFactory
 from ..infrastructure.logger import get_logger
 from ..config import Config
 from .zep_entity_reader import EntityNode
 
-logger = get_logger("mirofish.entity_prompt_extractor")
+logger = get_logger("lightworld.entity_prompt_extractor")
 
 
 class EntityPromptExtractor:
@@ -77,7 +78,7 @@ class EntityPromptExtractor:
         )
         self.llm = None
         if self.use_llm:
-            self.llm = LLMClient(
+            self.llm = LLMClientFactory.get_shared_client(
                 api_key=api_key,
                 base_url=base_url,
                 model=model_name

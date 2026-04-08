@@ -17,6 +17,7 @@ from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 from .memory_keywords import MemoryKeywordExtractor
 from .cluster_flags import resolve_cluster_feature_flags
 from ...infrastructure.llm_client import LLMClient
+from ...infrastructure.llm_client_factory import LLMClientFactory
 
 
 def _safe_float(value: Any, default: float = 0.0) -> float:
@@ -875,7 +876,7 @@ class TopologyAwareRuntime:
         if self._llm_client is not None:
             return self._llm_client
         try:
-            self._llm_client = LLMClient()
+            self._llm_client = LLMClientFactory.get_shared_client()
         except Exception as e:
             self.log(f"Keyword consistency LLM unavailable, fallback to lexical overlap: {e}")
             self._llm_client = None

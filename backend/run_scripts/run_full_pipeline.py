@@ -1,7 +1,7 @@
 """Legacy full pipeline script wrapper.
 
 Preferred command:
-`uv run mirofish-full-run --config path/to/full_run.config.json`
+`uv run lightworld-full-run --config path/to/full_run.config.json`
 """
 
 import os

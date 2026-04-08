@@ -18,6 +18,7 @@ backend/logs/
 backend/uploads/
 output/
 backend/input2graph/projects/
+experiments/run_*/
 
 # Local databases
 *.db

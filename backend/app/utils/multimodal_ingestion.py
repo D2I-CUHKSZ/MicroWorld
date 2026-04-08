@@ -28,10 +28,11 @@ from PIL import Image
 from ..setting.settings import Config
 from ..infrastructure.file_parser import FileParser
 from ..infrastructure.llm_client import LLMClient
+from ..infrastructure.llm_client_factory import LLMClientFactory
 from ..infrastructure.logger import get_logger
 from .text_processor import TextProcessor
 
-logger = get_logger("mirofish.multimodal_ingestion")
+logger = get_logger("lightworld.multimodal_ingestion")
 
 
 IMAGE_ANALYSIS_SYSTEM_PROMPT = """你是一个多模态内容分析助手。
@@ -577,12 +578,12 @@ transcript:
 
     def _get_llm_client(self) -> LLMClient:
         if self._llm_client is None:
-            self._llm_client = LLMClient(model=self.model_name)
+            self._llm_client = LLMClientFactory.get_shared_client(model=self.model_name)
         return self._llm_client
 
     def _get_audio_llm_client(self) -> LLMClient:
         if self._audio_llm_client is None:
-            self._audio_llm_client = LLMClient(
+            self._audio_llm_client = LLMClientFactory.get_shared_client(
                 api_key=Config.MULTIMODAL_AUDIO_API_KEY,
                 base_url=Config.MULTIMODAL_AUDIO_BASE_URL,
                 model=self.audio_model_name,

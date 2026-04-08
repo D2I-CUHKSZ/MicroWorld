@@ -26,7 +26,7 @@ class Config:
     """Flask config."""
 
     # Flask
-    SECRET_KEY = os.environ.get("SECRET_KEY", "mirofish-secret-key")
+    SECRET_KEY = os.environ.get("SECRET_KEY", "lightworld-secret-key")
     DEBUG = os.environ.get("FLASK_DEBUG", "True").lower() == "true"
     JSON_AS_ASCII = False
 

@@ -12,7 +12,7 @@ from app.modules.graph.local_pipeline import LocalGraphPipeline, LocalPipelineOp
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="MiroFish 本地多模态直读：文本/图片/视频 -> 证据块 -> 本体生成 -> 图谱构建"
+        description="LightWorld 本地多模态直读：文本/图片/视频 -> 证据块 -> 本体生成 -> 图谱构建"
     )
     parser.add_argument("--config", default="", help="从 JSON 配置文件读取本地管线参数")
     parser.add_argument(

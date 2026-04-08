@@ -1013,6 +1013,66 @@ wheels = [
 ]
 
 [[package]]
+name = "lightworld-backend"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "camel-ai" },
+    { name = "camel-oasis" },
+    { name = "chardet" },
+    { name = "charset-normalizer" },
+    { name = "flask" },
+    { name = "flask-cors" },
+    { name = "openai" },
+    { name = "pillow" },
+    { name = "pydantic" },
+    { name = "pymupdf" },
+    { name = "python-dotenv" },
+    { name = "socksio" },
+    { name = "zep-cloud" },
+]
+
+[package.optional-dependencies]
+dev = [
+    { name = "pipreqs" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "camel-ai", specifier = "==0.2.78" },
+    { name = "camel-oasis", specifier = "==0.2.5" },
+    { name = "chardet", specifier = ">=5.0.0" },
+    { name = "charset-normalizer", specifier = ">=3.0.0" },
+    { name = "flask", specifier = ">=3.0.0" },
+    { name = "flask-cors", specifier = ">=6.0.0" },
+    { name = "openai", specifier = ">=1.0.0" },
+    { name = "pillow", specifier = ">=10.0.0" },
+    { name = "pipreqs", marker = "extra == 'dev'", specifier = ">=0.5.0" },
+    { name = "pydantic", specifier = ">=2.0.0" },
+    { name = "pymupdf", specifier = ">=1.24.0" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0.0" },
+    { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.23.0" },
+    { name = "python-dotenv", specifier = ">=1.0.0" },
+    { name = "socksio", specifier = ">=1.0.0" },
+    { name = "zep-cloud", specifier = "==3.13.0" },
+]
+provides-extras = ["dev"]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "pytest", specifier = ">=8.0.0" },
+    { name = "pytest-asyncio", specifier = ">=0.23.0" },
+]
+
+[[package]]
 name = "lxml"
 version = "6.0.2"
 source = { registry = "https://pypi.org/simple" }
@@ -1235,66 +1295,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/d6/2c/db9ae5ab1fcdd9cd2bcc7ca3b7361b712e30590b64d5151a31563af8f82d/mcp-1.24.0.tar.gz", hash = "sha256:aeaad134664ce56f2721d1abf300666a1e8348563f4d3baff361c3b652448efc", size = 604375, upload-time = "2025-12-12T14:19:38.205Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/61/0d/5cf14e177c8ae655a2fd9324a6ef657ca4cafd3fc2201c87716055e29641/mcp-1.24.0-py3-none-any.whl", hash = "sha256:db130e103cc50ddc3dffc928382f33ba3eaef0b711f7a87c05e7ded65b1ca062", size = 232896, upload-time = "2025-12-12T14:19:36.14Z" },
-]
-
-[[package]]
-name = "mirofish-backend"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "camel-ai" },
-    { name = "camel-oasis" },
-    { name = "chardet" },
-    { name = "charset-normalizer" },
-    { name = "flask" },
-    { name = "flask-cors" },
-    { name = "openai" },
-    { name = "pillow" },
-    { name = "pydantic" },
-    { name = "pymupdf" },
-    { name = "python-dotenv" },
-    { name = "socksio" },
-    { name = "zep-cloud" },
-]
-
-[package.optional-dependencies]
-dev = [
-    { name = "pipreqs" },
-    { name = "pytest" },
-    { name = "pytest-asyncio" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "pytest" },
-    { name = "pytest-asyncio" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "camel-ai", specifier = "==0.2.78" },
-    { name = "camel-oasis", specifier = "==0.2.5" },
-    { name = "chardet", specifier = ">=5.0.0" },
-    { name = "charset-normalizer", specifier = ">=3.0.0" },
-    { name = "flask", specifier = ">=3.0.0" },
-    { name = "flask-cors", specifier = ">=6.0.0" },
-    { name = "openai", specifier = ">=1.0.0" },
-    { name = "pillow", specifier = ">=10.0.0" },
-    { name = "pipreqs", marker = "extra == 'dev'", specifier = ">=0.5.0" },
-    { name = "pydantic", specifier = ">=2.0.0" },
-    { name = "pymupdf", specifier = ">=1.24.0" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0.0" },
-    { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.23.0" },
-    { name = "python-dotenv", specifier = ">=1.0.0" },
-    { name = "socksio", specifier = ">=1.0.0" },
-    { name = "zep-cloud", specifier = "==3.13.0" },
-]
-provides-extras = ["dev"]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "pytest", specifier = ">=8.0.0" },
-    { name = "pytest-asyncio", specifier = ">=0.23.0" },
 ]
 
 [[package]]

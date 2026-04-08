@@ -1,11 +1,11 @@
 [project]
-name = "mirofish-backend"
+name = "lightworld-backend"
 version = "0.1.0"
-description = "MiroFish - 简洁通用的群体智能引擎，预测万物"
+description = "LightWorld - 多模态社会模拟与推演引擎"
 requires-python = ">=3.11"
 license = { text = "AGPL-3.0" }
 authors = [
-    { name = "MiroFish Team" }
+    { name = "LightWorld Team" }
 ]
 
 dependencies = [
@@ -44,10 +44,10 @@ dev = [
 ]
 
 [project.scripts]
-mirofish-api = "app.run.api:main"
-mirofish-local-pipeline = "app.run.local_pipeline:main"
-mirofish-parallel-sim = "app.run.parallel_simulation:main"
-mirofish-full-run = "app.run.full_run:main"
+lightworld-api = "app.run.api:main"
+lightworld-local-pipeline = "app.run.local_pipeline:main"
+lightworld-parallel-sim = "app.run.parallel_simulation:main"
+lightworld-full-run = "app.run.full_run:main"
 
 [build-system]
 requires = ["hatchling"]

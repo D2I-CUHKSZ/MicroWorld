@@ -44,11 +44,11 @@
 ## 杩愯鍏ュ彛
 
 - API 鏈嶅姟
-  - `cd backend && uv run mirofish-api`
+  - `cd backend && uv run lightworld-api`
 - 鏈湴鍥捐氨鏋勫缓
-  - `cd backend && uv run mirofish-local-pipeline ...`
+  - `cd backend && uv run lightworld-local-pipeline ...`
 - 骞惰妯℃嫙
-  - `cd backend && uv run mirofish-parallel-sim --config <path>`
+  - `cd backend && uv run lightworld-parallel-sim --config <path>`
 
 ## 閰嶇疆妯℃澘
 
@@ -240,14 +240,14 @@ flowchart TD
 - project 鐩綍
   - `/home/shulun/project/LightWorld/backend/input2graph/projects/proj_6d56e4817baf`
 - graph id
-  - `mirofish_9f0d1c84b2164adf`
+  - `lightworld_9f0d1c84b2164adf`
 
 ### 绀轰緥 2锛氬熀浜庤鍥捐氨鍑嗗 simulation
 
 杈撳叆锛?
 
 - `project_id = proj_6d56e4817baf`
-- `graph_id = mirofish_9f0d1c84b2164adf`
+- `graph_id = lightworld_9f0d1c84b2164adf`
 - 涓€涓渶灏?Twitter smoke test 鐨?simulation requirement
 
 prepare 闃舵浜х墿锛?
