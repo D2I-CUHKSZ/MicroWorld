@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LightWorld | Examples</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body
+    data-page="examples"
+    data-nav-cta-text="User Guide"
+    data-nav-cta-href="guide.html"
+  >
+    <nav id="main-nav"></nav>
+
+    <section class="subpage-hero">
+      <div class="container">
+        <div class="section-label">Examples</div>
+        <h1 class="subpage-title">Representative examples and placeholders</h1>
+        <p class="subpage-desc">
+          The repository currently contains one case that is easy to present
+          clearly on a public project site: the Wuhan University reputation
+          simulation experiment.
+        </p>
+      </div>
+    </section>
+
+    <section class="section reveal">
+      <div class="container">
+        <div class="tabs">
+          <button class="tab-button active" data-tab-target="tab-whu">WHU Simulation</button>
+          <button class="tab-button" data-tab-target="tab-pipeline">Pipeline Example</button>
+          <button class="tab-button" data-tab-target="tab-demo">Public Demo</button>
+        </div>
+
+        <div class="tab-panel active" id="tab-whu">
+          <div class="meta-strip">
+            <span><strong>Domain</strong> Public reputation</span>
+            <span><strong>Input package</strong> PDF + images + videos</span>
+            <span><strong>Entities</strong> 31</span>
+            <span><strong>Topology units</strong> 29</span>
+          </div>
+
+          <div class="demo-grid">
+            <div class="tab-panel-inner">
+              <h3>Input material</h3>
+              <p>
+                The current repository already includes event images, preview
+                video frames, page data, and a complete experiment summary.
+              </p>
+              <div class="image-grid" style="margin-top: 18px;">
+                <img src="./assets/event/image_01.jpg" alt="WHU event image 1" />
+                <img src="./assets/event/news_frame.jpg" alt="WHU event news frame" />
+                <img src="./assets/event/image_03.jpg" alt="WHU event image 2" />
+                <img src="./assets/event/commentary_frame.jpg" alt="WHU event commentary frame" />
+              </div>
+              <div class="metric-grid">
+                <div class="metric-box">
+                  <strong>20,833</strong>
+                  <span>input characters</span>
+                </div>
+                <div class="metric-box">
+                  <strong>31</strong>
+                  <span>profiles generated</span>
+                </div>
+                <div class="metric-box">
+                  <strong>564</strong>
+                  <span>total actions</span>
+                </div>
+                <div class="metric-box">
+                  <strong>295</strong>
+                  <span>memory writes</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="tab-panel-inner">
+              <h3>What this experiment shows</h3>
+              <p>
+                This case is useful because the results are readable even without
+                deep internal context. It shows the main LightWorld ideas in one
+                place: multimodal ingestion, topology-aware scheduling, memory,
+                and asymmetric influence.
+              </p>
+              <ul class="bullet-list">
+                <li>Twitter actions recorded: 292</li>
+                <li>Reddit actions recorded: 272</li>
+                <li>Twitter memory writes: 50</li>
+                <li>Reddit memory writes: 245</li>
+              </ul>
+              <div class="insight-box">
+                <p>
+                  One readable PPR result: in the WHU experiment, the directed
+                  influence from <strong>self-media platform → school side</strong>
+                  is about <strong>0.129</strong>, while the reverse direction is
+                  about <strong>0.043</strong>. That is the kind of asymmetry the
+                  project wants to make visible.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-panel" id="tab-pipeline">
+          <div class="tab-panel-inner placeholder-card">
+            <h3>Pipeline example</h3>
+            <p>
+              Reserved for a future page showing one complete input-to-graph
+              workflow with screenshots or structured output samples.
+            </p>
+            <span class="placeholder-note">Placeholder</span>
+          </div>
+        </div>
+
+        <div class="tab-panel" id="tab-demo">
+          <div class="tab-panel-inner placeholder-card">
+            <h3>Public interactive demo</h3>
+            <p>
+              Reserved for a hosted public demo once the backend service and a
+              browser-facing frontend are ready to be deployed together.
+            </p>
+            <span class="placeholder-note">Placeholder</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer id="main-footer"></footer>
+
+    <script src="template.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

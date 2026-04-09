@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LightWorld | User Guide</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body
+    data-page="guide"
+    data-nav-cta-text="View Example"
+    data-nav-cta-href="examples.html"
+  >
+    <nav id="main-nav"></nav>
+
+    <section class="subpage-hero">
+      <div class="container">
+        <div class="section-label">User Guide</div>
+        <h1 class="subpage-title">Get started with LightWorld</h1>
+        <p class="subpage-desc">
+          This page keeps the setup path short: clone the repository, configure
+          the required environment variables, run the backend, and execute the
+          included sample configuration.
+        </p>
+      </div>
+    </section>
+
+    <section class="section reveal">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-label">Quick Start</div>
+          <h2 class="section-title">Five steps to a local run</h2>
+          <p class="section-desc">
+            These are the shortest steps that map directly to the current
+            repository layout.
+          </p>
+        </div>
+        <div class="guide-steps">
+          <article class="step-card">
+            <div class="step-number">1</div>
+            <h3>Clone the repository</h3>
+            <p>Download the project and enter the repository root.</p>
+            <div class="code-block">
+              <code>git clone git@github.com:JayLZhou/LightWorld.git
+cd LightWorld</code>
+            </div>
+          </article>
+
+          <article class="step-card">
+            <div class="step-number">2</div>
+            <h3>Create a root <code>.env</code></h3>
+            <p>
+              The backend validates at least two required keys before startup.
+            </p>
+            <div class="code-block">
+              <code>LLM_API_KEY=your_key
+ZEP_API_KEY=your_key
+
+# Optional
+LLM_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+LLM_MODEL_NAME=qwen-plus</code>
+            </div>
+          </article>
+
+          <article class="step-card">
+            <div class="step-number">3</div>
+            <h3>Install backend dependencies</h3>
+            <p>
+              The current repository expects dependency management through
+              <code>uv</code>.
+            </p>
+            <div class="code-block">
+              <code>cd backend
+uv sync</code>
+            </div>
+          </article>
+
+          <article class="step-card">
+            <div class="step-number">4</div>
+            <h3>Start the API service</h3>
+            <p>
+              This brings up the Flask backend that serves the graph,
+              simulation, and report endpoints.
+            </p>
+            <div class="code-block">
+              <code>cd backend
+uv run lightworld-api</code>
+            </div>
+          </article>
+
+          <article class="step-card">
+            <div class="step-number">5</div>
+            <h3>Run the included sample workflow</h3>
+            <p>
+              The repository already contains a multimodal example package for
+              the Wuhan University case.
+            </p>
+            <div class="code-block">
+              <code>cd backend
+uv run lightworld-full-run \
+  --config ../multimodal_inputs/baike_wuda_event/full_run.config.json</code>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-alt reveal">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-label">Useful Commands</div>
+          <h2 class="section-title">Main entry points</h2>
+        </div>
+        <div class="feature-grid">
+          <article class="feature-card">
+            <h3>API service</h3>
+            <div class="code-block"><code>uv run lightworld-api</code></div>
+          </article>
+          <article class="feature-card">
+            <h3>Local graph pipeline</h3>
+            <div class="code-block"><code>uv run lightworld-local-pipeline --config ...</code></div>
+          </article>
+          <article class="feature-card">
+            <h3>Parallel simulation</h3>
+            <div class="code-block"><code>uv run lightworld-parallel-sim --config ...</code></div>
+          </article>
+          <article class="feature-card">
+            <h3>Full run</h3>
+            <div class="code-block"><code>uv run lightworld-full-run --config ...</code></div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section reveal">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-label">Notes</div>
+          <h2 class="section-title">What to expect from the current repo</h2>
+        </div>
+        <div class="two-col-grid">
+          <article class="detail-card">
+            <h3>What is already ready</h3>
+            <ul class="plain-list">
+              <li>Backend API skeleton and routes</li>
+              <li>Multimodal sample inputs</li>
+              <li>Experiment artifacts and summaries</li>
+              <li>Static GitHub Pages project site</li>
+            </ul>
+          </article>
+          <article class="detail-card">
+            <h3>What is not part of Pages</h3>
+            <ul class="plain-list">
+              <li>Long-running simulation backend</li>
+              <li>Online interactive upload-and-run product</li>
+              <li>Hosted public demo service</li>
+              <li>Cloud deployment orchestration</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <footer id="main-footer"></footer>
+
+    <script src="template.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

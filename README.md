@@ -13,12 +13,15 @@
 [![Python](https://img.shields.io/badge/Python-3.10%2B-050505.svg?style=for-the-badge&logo=python&logoColor=00ffcc)](#-quick-start--boot-protocol)
 [![Omni-Modal](https://img.shields.io/badge/Inputs-Graph%20%7C%20Text%20%7C%20Image%20%7C%20Video-050505.svg?style=for-the-badge&logo=graphql&logoColor=00ffcc)](#-matrix-architecture)
 [![Concurrency](https://img.shields.io/badge/Agent%20Scale-100k%2B-050505.svg?style=for-the-badge&logo=apachespark&logoColor=00ffcc)](#-core-capabilities)
+[![Live Site](https://img.shields.io/badge/Live%20Site-GitHub%20Pages-0f766e?style=for-the-badge&logo=githubpages&logoColor=white)](https://jaylzhou.github.io/LightWorld/)
 
 <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=19&duration=2300&pause=650&color=00FFCC&center=true&vCenter=true&width=980&lines=Booting+distributed+agent+civilization...;Injecting+real-world+signals+into+sandbox+physics...;Forecasting+collective+trajectories+before+they+happen..." alt="typing-banner" />
 
 *"In minimalist code, we simulate the reflection of the entire world."*
 
 [English](#) · [简体中文](#) · [Project Whitepaper](#) · [Video Demo](#)
+
+Project Site: https://jaylzhou.github.io/LightWorld/
 
 </div>
 

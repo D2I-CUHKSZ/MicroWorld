@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LightWorld | Home</title>
+    <meta
+      name="description"
+      content="LightWorld is a lightweight multi-modal social simulation engine for event analysis, topology-aware runtime optimization, and report generation."
+    />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body
+    data-page="home"
+    data-nav-cta-text="GitHub Repo"
+    data-nav-cta-href="https://github.com/JayLZhou/LightWorld"
+    data-nav-cta-target="_blank"
+  >
+    <nav id="main-nav"></nav>
+
+    <section class="hero">
+      <div class="hero-inner">
+        <div class="hero-badge">Lightweight · Multi-Modal · Topology-Aware</div>
+        <h1>LightWorld: A Lightweight Multi-Modal Social Simulation Engine</h1>
+        <p class="hero-abstract">
+          LightWorld turns documents, images, videos, and graph signals into a
+          runnable simulation pipeline. It is designed for public-event analysis,
+          brand reputation scenarios, and social influence experiments where both
+          runtime efficiency and interpretability matter.
+        </p>
+        <div class="hero-actions">
+          <a href="examples.html" class="btn-primary">View Example</a>
+          <a href="guide.html" class="btn-outline">Read User Guide</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section reveal">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-label">Project Overview</div>
+          <h2 class="section-title">What the project does</h2>
+          <p class="section-desc">
+            The repository already contains the full chain from multimodal input
+            ingestion to graph construction, simulation preparation, runtime
+            execution, and report generation.
+          </p>
+        </div>
+        <div class="two-col-grid">
+          <div class="info-card">
+            <h3>Core workflow</h3>
+            <p>
+              LightWorld parses real-world materials into ontology, graph, and
+              agent profiles, then runs topology-aware simulation and produces
+              interpretable outputs.
+            </p>
+            <div class="process-strip">
+              <span>Input</span>
+              <span>Graph Build</span>
+              <span>Simulation</span>
+              <span>Report</span>
+            </div>
+          </div>
+          <div class="info-card">
+            <h3>Best-fit scenarios</h3>
+            <ul class="plain-list">
+              <li>Public event and opinion analysis</li>
+              <li>Brand reputation experiments</li>
+              <li>Influence propagation studies</li>
+              <li>Multi-source social signal simulation</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-alt reveal">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-label">Strengths</div>
+          <h2 class="section-title">Key advantages</h2>
+          <p class="section-desc">
+            The value of LightWorld is not just feature count. It comes from a
+            more practical runtime design.
+          </p>
+        </div>
+        <div class="feature-grid">
+          <article class="feature-card">
+            <div class="card-pill">01</div>
+            <h3>Multi-modal input</h3>
+            <p>
+              Text, images, videos, and graph context can enter the same
+              pipeline instead of being flattened into text-only input.
+            </p>
+          </article>
+          <article class="feature-card">
+            <div class="card-pill">02</div>
+            <h3>Lightweight memory</h3>
+            <p>
+              Incremental memory keeps useful state without carrying a full
+              history into every runtime step.
+            </p>
+          </article>
+          <article class="feature-card">
+            <div class="card-pill">03</div>
+            <h3>Topology-driven units</h3>
+            <p>
+              The runtime activates representative units instead of blindly
+              scheduling every agent in every round.
+            </p>
+          </article>
+          <article class="feature-card">
+            <div class="card-pill">04</div>
+            <h3>Asymmetric influence via PPR</h3>
+            <p>
+              Influence is directional. Personalized PageRank helps estimate who
+              can move whom, instead of assuming symmetric interactions.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section reveal">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-label">System View</div>
+          <h2 class="section-title">How it works</h2>
+          <p class="section-desc">
+            The current project can already be explained through three compact
+            layers.
+          </p>
+        </div>
+        <div class="overview-grid">
+          <article class="overview-card">
+            <h3>Ingestion</h3>
+            <p>
+              Parse PDFs, text files, images, and videos, then extract usable
+              event context for graph construction.
+            </p>
+          </article>
+          <article class="overview-card">
+            <h3>Runtime</h3>
+            <p>
+              Build ontology, graph, entity prompts, social relation graph, and
+              platform-ready simulation configuration.
+            </p>
+          </article>
+          <article class="overview-card">
+            <h3>Outputs</h3>
+            <p>
+              Produce runtime artifacts, memory traces, topology snapshots, and
+              final reports for inspection.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-alt reveal">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title">Explore more</h2>
+        </div>
+        <div class="landing-grid">
+          <a href="architecture.html" class="landing-card">
+            <h3>Architecture</h3>
+            <p>Pipeline, runtime design, and deployment boundary.</p>
+            <span class="landing-card-link">Explore →</span>
+          </a>
+          <a href="video.html" class="landing-card">
+            <h3>Video</h3>
+            <p>Reserved for a future walkthrough and recorded demo.</p>
+            <span class="landing-card-link">Open →</span>
+          </a>
+          <a href="guide.html" class="landing-card">
+            <h3>User Guide</h3>
+            <p>Clone, configure, run, and execute the sample workflow.</p>
+            <span class="landing-card-link">Read →</span>
+          </a>
+          <a href="examples.html" class="landing-card">
+            <h3>Examples</h3>
+            <p>Readable case-study pages built from the current repository.</p>
+            <span class="landing-card-link">View →</span>
+          </a>
+          <a href="demo.html" class="landing-card">
+            <h3>Demo</h3>
+            <p>Placeholder for a future public interactive frontend.</p>
+            <span class="landing-card-link">Open →</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <footer id="main-footer"></footer>
+
+    <script src="template.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

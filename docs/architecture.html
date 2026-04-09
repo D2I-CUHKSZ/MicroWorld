@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LightWorld | Architecture</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body
+    data-page="architecture"
+    data-nav-cta-text="GitHub Repo"
+    data-nav-cta-href="https://github.com/JayLZhou/LightWorld"
+    data-nav-cta-target="_blank"
+  >
+    <nav id="main-nav"></nav>
+
+    <section class="subpage-hero">
+      <div class="container">
+        <div class="section-label">Architecture</div>
+        <h1 class="subpage-title">System Architecture and Runtime Pipeline</h1>
+        <p class="subpage-desc">
+          LightWorld already contains the core stages needed for a complete
+          multimodal simulation workflow: ingestion, graph construction,
+          simulation preparation, topology-aware runtime, and report output.
+        </p>
+      </div>
+    </section>
+
+    <section class="section reveal">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-label">End-to-End Flow</div>
+          <h2 class="section-title">Main pipeline</h2>
+          <p class="section-desc">
+            The current repository structure can be read as one continuous chain,
+            not a disconnected collection of scripts.
+          </p>
+        </div>
+        <div class="architecture-board">
+          <div class="architecture-row">
+            <div class="architecture-box">
+              <h3>1. Multi-modal ingestion</h3>
+              <p>Parse documents, images, and videos into structured event context.</p>
+            </div>
+            <div class="architecture-box">
+              <h3>2. Ontology and graph</h3>
+              <p>Generate entity types, edge types, graph chunks, and graph IDs.</p>
+            </div>
+            <div class="architecture-box">
+              <h3>3. Simulation preparation</h3>
+              <p>Build entity prompts, platform profiles, social relation graph, and config.</p>
+            </div>
+            <div class="architecture-box">
+              <h3>4. Runtime and report</h3>
+              <p>Run platform simulation, collect artifacts, and generate reports.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-alt reveal">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-label">Runtime Design</div>
+          <h2 class="section-title">What makes the runtime distinctive</h2>
+        </div>
+        <div class="feature-grid">
+          <article class="feature-card">
+            <h3>Multi-modal first</h3>
+            <p>
+              Images and videos are not treated as optional decoration. They are
+              part of the event package that feeds the simulation pipeline.
+            </p>
+          </article>
+          <article class="feature-card">
+            <h3>SimpleMem-style memory</h3>
+            <p>
+              Memory is stored incrementally and retrieved selectively, which is
+              more scalable than replaying the full conversation history.
+            </p>
+          </article>
+          <article class="feature-card">
+            <h3>Topology-aware unit scheduling</h3>
+            <p>
+              The runtime works on representative units and neighborhoods to
+              reduce unnecessary activation cost.
+            </p>
+          </article>
+          <article class="feature-card">
+            <h3>PPR-driven asymmetry</h3>
+            <p>
+              Personalized PageRank is used to estimate directed influence rather
+              than assuming balanced pairwise effects.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section reveal">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-label">Repository Entry Points</div>
+          <h2 class="section-title">Current commands and boundaries</h2>
+        </div>
+        <div class="deployment-grid">
+          <article class="code-card">
+            <h3>Backend entry points</h3>
+            <div class="code-block">
+              <code>cd backend
+uv run lightworld-api
+uv run lightworld-local-pipeline --config /abs/path/to/local_pipeline.json
+uv run lightworld-parallel-sim --config /abs/path/to/simulation_config.json
+uv run lightworld-full-run --config /abs/path/to/full_run.config.json</code>
+            </div>
+          </article>
+          <article class="deployment-card">
+            <h3>Deployment boundary</h3>
+            <p>
+              GitHub Pages can host the project website and example pages. The
+              actual Flask backend and simulation services still need their own
+              runtime environment if you want an online interactive product.
+            </p>
+            <ul class="plain-list">
+              <li>Static project website: GitHub Pages</li>
+              <li>Interactive API service: separate backend deployment</li>
+              <li>Current Pages site: project presentation, guide, and examples</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <footer id="main-footer"></footer>
+
+    <script src="template.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
