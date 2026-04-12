@@ -1,0 +1,1387 @@
+
+
+import sys
+import os
+
+if sys.platform == 'win32':
+
+
+    os.environ.setdefault('PYTHONUTF8', '1')
+    os.environ.setdefault('PYTHONIOENCODING', 'utf-8')
+
+
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    if hasattr(sys.stderr, 'reconfigure'):
+        sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+
+
+    import builtins
+    _original_open = builtins.open
+
+    def _utf8_open(file, mode='r', buffering=-1, encoding=None, errors=None,
+                   newline=None, closefd=True, opener=None):
+
+        if encoding is None and 'b' not in mode:
+            encoding = 'utf-8'
+        return _original_open(file, mode, buffering, encoding, errors,
+                              newline, closefd, opener)
+
+    builtins.open = _utf8_open
+
+import argparse
+import asyncio
+import csv
+import json
+import logging
+import math
+import multiprocessing
+import random
+import re
+import signal
+import sqlite3
+import warnings
+from collections import deque, defaultdict
+from datetime import datetime
+from typing import Dict, Any, List, Optional, Tuple, Callable
+
+
+_shutdown_event = None
+_cleanup_done = False
+
+
+_module_dir = os.path.dirname(os.path.abspath(__file__))
+_src_dir = os.path.abspath(os.path.join(_module_dir, '..', '..'))
+_project_root = os.path.abspath(os.path.join(_src_dir, '..'))
+
+
+from dotenv import load_dotenv
+_env_file = os.path.join(_project_root, '.env')
+if os.path.exists(_env_file):
+    load_dotenv(_env_file)
+    print(f"已加载环境配置: {_env_file}")
+else:
+
+    _backend_env = os.path.join(_backend_dir, '.env')
+    if os.path.exists(_backend_env):
+        load_dotenv(_backend_env)
+        print(f"已加载环境配置: {_backend_env}")
+
+
+class MaxTokensWarningFilter(logging.Filter):
+
+    def filter(self, record):
+
+        if "max_tokens" in record.getMessage() and "Invalid or missing" in record.getMessage():
+            return False
+        return True
+
+
+logging.getLogger().addFilter(MaxTokensWarningFilter())
+
+
+def disable_oasis_logging():
+
+    oasis_loggers = [
+        "social.agent",
+        "social.twitter",
+        "social.rec",
+        "oasis.env",
+        "table",
+    ]
+
+    for logger_name in oasis_loggers:
+        logger = logging.getLogger(logger_name)
+        logger.setLevel(logging.CRITICAL)
+        logger.handlers.clear()
+        logger.propagate = False
+
+
+def init_logging_for_simulation(simulation_dir: str):
+
+    disable_oasis_logging()
+
+
+    old_log_dir = os.path.join(simulation_dir, "log")
+    if os.path.exists(old_log_dir):
+        import shutil
+        shutil.rmtree(old_log_dir, ignore_errors=True)
+
+
+from lightworld.simulation.action_logger import SimulationLogManager, PlatformActionLogger
+
+try:
+    from camel.models import ModelFactory
+    from camel.types import ModelPlatformType
+    from camel.utils import BaseTokenCounter
+    from oasis import (
+        ActionType,
+        ManualAction,
+    )
+except ImportError as e:
+    print(f"错误: 缺少依赖 {e}")
+    print("请先安装: pip install oasis-ai camel-ai")
+    sys.exit(1)
+
+from lightworld.simulation.platform_runner import (
+    PlatformSimulation,
+    REDDIT_SPEC,
+    TWITTER_SPEC,
+    run_platform_simulation,
+)
+from lightworld.simulation.cluster_cli import (
+    CLUSTER_METHOD_LLM_KEYWORD,
+    CLUSTER_METHOD_THRESHOLD,
+    apply_cluster_method_to_simulation_config,
+    describe_cluster_method,
+    detect_cluster_method,
+    maybe_prompt_cluster_method,
+)
+from lightworld.simulation.cluster_flags import normalize_topology_cluster_config
+
+
+IPC_COMMANDS_DIR = "ipc_commands"
+IPC_RESPONSES_DIR = "ipc_responses"
+ENV_STATUS_FILE = "env_status.json"
+SIMULATION_STATE_FILE = "state.json"
+
+_STATE_UNSET = object()
+
+
+def _read_json_file(path: str) -> Dict[str, Any]:
+    if not os.path.exists(path):
+        return {}
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+
+def _write_json_file(path: str, payload: Dict[str, Any]):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False, indent=2)
+
+
+def _derive_simulation_status(selected_platforms: List[str], platform_statuses: Dict[str, str], fallback: str = "ready") -> str:
+    statuses = [platform_statuses.get(platform, "not_started") for platform in selected_platforms]
+    if not statuses:
+        return fallback
+    if any(status == "failed" for status in statuses):
+        return "failed"
+    if any(status in {"starting", "running"} for status in statuses):
+        return "running"
+    if all(status == "completed" for status in statuses):
+        return "completed"
+    if all(status in {"completed", "stopped"} for status in statuses):
+        return "stopped"
+    return fallback
+
+
+def _update_simulation_state_file(
+    simulation_dir: str,
+    selected_platforms: List[str],
+    platform_statuses: Dict[str, str],
+    platform_rounds: Dict[str, int],
+    error: Any = _STATE_UNSET,
+):
+    state_path = os.path.join(simulation_dir, SIMULATION_STATE_FILE)
+    if not os.path.exists(state_path):
+        return
+
+    state = _read_json_file(state_path)
+    if not state:
+        return
+
+    state["status"] = _derive_simulation_status(
+        selected_platforms=selected_platforms,
+        platform_statuses=platform_statuses,
+        fallback=str(state.get("status", "ready") or "ready"),
+    )
+    state["current_round"] = max((int(platform_rounds.get(platform, 0) or 0) for platform in selected_platforms), default=0)
+    state["twitter_status"] = platform_statuses.get("twitter", str(state.get("twitter_status", "not_started") or "not_started"))
+    state["reddit_status"] = platform_statuses.get("reddit", str(state.get("reddit_status", "not_started") or "not_started"))
+    if error is not _STATE_UNSET:
+        state["error"] = error
+    elif state["status"] in {"running", "completed", "stopped"}:
+        state["error"] = None
+    state["updated_at"] = datetime.now().isoformat()
+    _write_json_file(state_path, state)
+
+class CommandType:
+    INTERVIEW = "interview"
+    BATCH_INTERVIEW = "batch_interview"
+    CLOSE_ENV = "close_env"
+
+
+class ParallelIPCHandler:
+
+    def __init__(
+        self,
+        simulation_dir: str,
+        twitter_env=None,
+        twitter_agent_graph=None,
+        reddit_env=None,
+        reddit_agent_graph=None
+    ):
+        self.simulation_dir = simulation_dir
+        self.twitter_env = twitter_env
+        self.twitter_agent_graph = twitter_agent_graph
+        self.reddit_env = reddit_env
+        self.reddit_agent_graph = reddit_agent_graph
+
+        self.commands_dir = os.path.join(simulation_dir, IPC_COMMANDS_DIR)
+        self.responses_dir = os.path.join(simulation_dir, IPC_RESPONSES_DIR)
+        self.status_file = os.path.join(simulation_dir, ENV_STATUS_FILE)
+
+
+        os.makedirs(self.commands_dir, exist_ok=True)
+        os.makedirs(self.responses_dir, exist_ok=True)
+
+    def update_status(self, status: str):
+        with open(self.status_file, 'w', encoding='utf-8') as f:
+            json.dump({
+                "status": status,
+                "twitter_available": self.twitter_env is not None,
+                "reddit_available": self.reddit_env is not None,
+                "timestamp": datetime.now().isoformat()
+            }, f, ensure_ascii=False, indent=2)
+
+    def poll_command(self) -> Optional[Dict[str, Any]]:
+        if not os.path.exists(self.commands_dir):
+            return None
+
+
+        command_files = []
+        for filename in os.listdir(self.commands_dir):
+            if filename.endswith('.json'):
+                filepath = os.path.join(self.commands_dir, filename)
+                command_files.append((filepath, os.path.getmtime(filepath)))
+
+        command_files.sort(key=lambda x: x[1])
+
+        for filepath, _ in command_files:
+            try:
+                with open(filepath, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+            except (json.JSONDecodeError, OSError):
+                continue
+
+        return None
+
+    def send_response(self, command_id: str, status: str, result: Dict = None, error: str = None):
+        response = {
+            "command_id": command_id,
+            "status": status,
+            "result": result,
+            "error": error,
+            "timestamp": datetime.now().isoformat()
+        }
+
+        response_file = os.path.join(self.responses_dir, f"{command_id}.json")
+        with open(response_file, 'w', encoding='utf-8') as f:
+            json.dump(response, f, ensure_ascii=False, indent=2)
+
+
+        command_file = os.path.join(self.commands_dir, f"{command_id}.json")
+        try:
+            os.remove(command_file)
+        except OSError:
+            pass
+
+    def _get_env_and_graph(self, platform: str):
+        if platform == "twitter" and self.twitter_env:
+            return self.twitter_env, self.twitter_agent_graph, "twitter"
+        elif platform == "reddit" and self.reddit_env:
+            return self.reddit_env, self.reddit_agent_graph, "reddit"
+        else:
+            return None, None, None
+
+    async def _interview_single_platform(self, agent_id: int, prompt: str, platform: str) -> Dict[str, Any]:
+        env, agent_graph, actual_platform = self._get_env_and_graph(platform)
+
+        if not env or not agent_graph:
+            return {"platform": platform, "error": f"{platform}平台不可用"}
+
+        try:
+            agent = agent_graph.get_agent(agent_id)
+            interview_action = ManualAction(
+                action_type=ActionType.INTERVIEW,
+                action_args={"prompt": prompt}
+            )
+            actions = {agent: interview_action}
+            await env.step(actions)
+
+            result = self._get_interview_result(agent_id, actual_platform)
+            result["platform"] = actual_platform
+            return result
+
+        except Exception as e:
+            return {"platform": platform, "error": str(e)}
+
+    async def handle_interview(self, command_id: str, agent_id: int, prompt: str, platform: str = None) -> bool:
+
+        if platform in ("twitter", "reddit"):
+            result = await self._interview_single_platform(agent_id, prompt, platform)
+
+            if "error" in result:
+                self.send_response(command_id, "failed", error=result["error"])
+                print(f"  Interview失败: agent_id={agent_id}, platform={platform}, error={result['error']}")
+                return False
+            else:
+                self.send_response(command_id, "completed", result=result)
+                print(f"  Interview完成: agent_id={agent_id}, platform={platform}")
+                return True
+
+
+        if not self.twitter_env and not self.reddit_env:
+            self.send_response(command_id, "failed", error="没有可用的模拟环境")
+            return False
+
+        results = {
+            "agent_id": agent_id,
+            "prompt": prompt,
+            "platforms": {}
+        }
+        success_count = 0
+
+
+        tasks = []
+        platforms_to_interview = []
+
+        if self.twitter_env:
+            tasks.append(self._interview_single_platform(agent_id, prompt, "twitter"))
+            platforms_to_interview.append("twitter")
+
+        if self.reddit_env:
+            tasks.append(self._interview_single_platform(agent_id, prompt, "reddit"))
+            platforms_to_interview.append("reddit")
+
+
+        platform_results = await asyncio.gather(*tasks)
+
+        for platform_name, platform_result in zip(platforms_to_interview, platform_results):
+            results["platforms"][platform_name] = platform_result
+            if "error" not in platform_result:
+                success_count += 1
+
+        if success_count > 0:
+            self.send_response(command_id, "completed", result=results)
+            print(f"  Interview完成: agent_id={agent_id}, 成功平台数={success_count}/{len(platforms_to_interview)}")
+            return True
+        else:
+            errors = [f"{p}: {r.get('error', '未知错误')}" for p, r in results["platforms"].items()]
+            self.send_response(command_id, "failed", error="; ".join(errors))
+            print(f"  Interview失败: agent_id={agent_id}, 所有平台都失败")
+            return False
+
+    async def handle_batch_interview(self, command_id: str, interviews: List[Dict], platform: str = None) -> bool:
+
+        twitter_interviews = []
+        reddit_interviews = []
+        both_platforms_interviews = []
+
+        for interview in interviews:
+            item_platform = interview.get("platform", platform)
+            if item_platform == "twitter":
+                twitter_interviews.append(interview)
+            elif item_platform == "reddit":
+                reddit_interviews.append(interview)
+            else:
+
+                both_platforms_interviews.append(interview)
+
+
+        if both_platforms_interviews:
+            if self.twitter_env:
+                twitter_interviews.extend(both_platforms_interviews)
+            if self.reddit_env:
+                reddit_interviews.extend(both_platforms_interviews)
+
+        results = {}
+
+
+        if twitter_interviews and self.twitter_env:
+            try:
+                twitter_actions = {}
+                for interview in twitter_interviews:
+                    agent_id = interview.get("agent_id")
+                    prompt = interview.get("prompt", "")
+                    try:
+                        agent = self.twitter_agent_graph.get_agent(agent_id)
+                        twitter_actions[agent] = ManualAction(
+                            action_type=ActionType.INTERVIEW,
+                            action_args={"prompt": prompt}
+                        )
+                    except Exception as e:
+                        print(f"  警告: 无法获取Twitter Agent {agent_id}: {e}")
+
+                if twitter_actions:
+                    await self.twitter_env.step(twitter_actions)
+
+                    for interview in twitter_interviews:
+                        agent_id = interview.get("agent_id")
+                        result = self._get_interview_result(agent_id, "twitter")
+                        result["platform"] = "twitter"
+                        results[f"twitter_{agent_id}"] = result
+            except Exception as e:
+                print(f"  Twitter批量Interview失败: {e}")
+
+
+        if reddit_interviews and self.reddit_env:
+            try:
+                reddit_actions = {}
+                for interview in reddit_interviews:
+                    agent_id = interview.get("agent_id")
+                    prompt = interview.get("prompt", "")
+                    try:
+                        agent = self.reddit_agent_graph.get_agent(agent_id)
+                        reddit_actions[agent] = ManualAction(
+                            action_type=ActionType.INTERVIEW,
+                            action_args={"prompt": prompt}
+                        )
+                    except Exception as e:
+                        print(f"  警告: 无法获取Reddit Agent {agent_id}: {e}")
+
+                if reddit_actions:
+                    await self.reddit_env.step(reddit_actions)
+
+                    for interview in reddit_interviews:
+                        agent_id = interview.get("agent_id")
+                        result = self._get_interview_result(agent_id, "reddit")
+                        result["platform"] = "reddit"
+                        results[f"reddit_{agent_id}"] = result
+            except Exception as e:
+                print(f"  Reddit批量Interview失败: {e}")
+
+        if results:
+            self.send_response(command_id, "completed", result={
+                "interviews_count": len(results),
+                "results": results
+            })
+            print(f"  批量Interview完成: {len(results)} 个Agent")
+            return True
+        else:
+            self.send_response(command_id, "failed", error="没有成功的采访")
+            return False
+
+    def _get_interview_result(self, agent_id: int, platform: str) -> Dict[str, Any]:
+        db_path = os.path.join(self.simulation_dir, f"{platform}_simulation.db")
+
+        result = {
+            "agent_id": agent_id,
+            "response": None,
+            "timestamp": None
+        }
+
+        if not os.path.exists(db_path):
+            return result
+
+        try:
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+
+
+            cursor.execute("""
+                SELECT user_id, info, created_at
+                FROM trace
+                WHERE action = ? AND user_id = ?
+                ORDER BY created_at DESC
+                LIMIT 1
+            """, (ActionType.INTERVIEW.value, agent_id))
+
+            row = cursor.fetchone()
+            if row:
+                user_id, info_json, created_at = row
+                try:
+                    info = json.loads(info_json) if info_json else {}
+                    result["response"] = info.get("response", info)
+                    result["timestamp"] = created_at
+                except json.JSONDecodeError:
+                    result["response"] = info_json
+
+            conn.close()
+
+        except Exception as e:
+            print(f"  读取Interview结果失败: {e}")
+
+        return result
+
+    async def process_commands(self) -> bool:
+        command = self.poll_command()
+        if not command:
+            return True
+
+        command_id = command.get("command_id")
+        command_type = command.get("command_type")
+        args = command.get("args", {})
+
+        print(f"\n收到IPC命令: {command_type}, id={command_id}")
+
+        if command_type == CommandType.INTERVIEW:
+            await self.handle_interview(
+                command_id,
+                args.get("agent_id", 0),
+                args.get("prompt", ""),
+                args.get("platform")
+            )
+            return True
+
+        elif command_type == CommandType.BATCH_INTERVIEW:
+            await self.handle_batch_interview(
+                command_id,
+                args.get("interviews", []),
+                args.get("platform")
+            )
+            return True
+
+        elif command_type == CommandType.CLOSE_ENV:
+            print("收到关闭环境命令")
+            self.send_response(command_id, "completed", result={"message": "环境即将关闭"})
+            return False
+
+        else:
+            self.send_response(command_id, "failed", error=f"未知命令类型: {command_type}")
+            return True
+
+
+class OfflineApproxTokenCounter(BaseTokenCounter):
+
+    def count_tokens_from_messages(self, messages):
+        total = 0
+        for message in messages or []:
+            if not isinstance(message, dict):
+                total += len(self.encode(str(message)))
+                continue
+            for value in message.values():
+                if isinstance(value, list):
+                    for item in value:
+                        if isinstance(item, dict) and item.get("type") == "text":
+                            total += len(self.encode(str(item.get("text", ""))))
+                        else:
+                            total += len(self.encode(str(item)))
+                else:
+                    total += len(self.encode(str(value)))
+            total += 4
+        return total + 3
+
+    def encode(self, text: str):
+        text = str(text or "")
+        if not text:
+            return []
+
+        parts = re.findall(r"[\u4e00-\u9fff]|[A-Za-z0-9_]+|[^\s]", text)
+        return list(range(len(parts)))
+
+    def decode(self, token_ids):
+        return "<offline-token-counter>"
+
+
+def load_config(config_path: str) -> Dict[str, Any]:
+    with open(config_path, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+
+FILTERED_ACTIONS = {'refresh', 'sign_up'}
+
+
+ACTION_TYPE_MAP = {
+    'create_post': 'CREATE_POST',
+    'like_post': 'LIKE_POST',
+    'dislike_post': 'DISLIKE_POST',
+    'repost': 'REPOST',
+    'quote_post': 'QUOTE_POST',
+    'follow': 'FOLLOW',
+    'mute': 'MUTE',
+    'create_comment': 'CREATE_COMMENT',
+    'like_comment': 'LIKE_COMMENT',
+    'dislike_comment': 'DISLIKE_COMMENT',
+    'search_posts': 'SEARCH_POSTS',
+    'search_user': 'SEARCH_USER',
+    'trend': 'TREND',
+    'do_nothing': 'DO_NOTHING',
+    'interview': 'INTERVIEW',
+}
+
+
+def get_agent_names_from_config(config: Dict[str, Any]) -> Dict[int, str]:
+    agent_names = {}
+    agent_configs = config.get("agent_configs", [])
+
+    for agent_config in agent_configs:
+        agent_id = agent_config.get("agent_id")
+        entity_name = agent_config.get("entity_name", f"Agent_{agent_id}")
+        if agent_id is not None:
+            agent_names[agent_id] = entity_name
+
+    return agent_names
+
+
+def fetch_new_actions_from_db(
+    db_path: str,
+    last_rowid: int,
+    agent_names: Dict[int, str]
+) -> Tuple[List[Dict[str, Any]], int]:
+    actions = []
+    new_last_rowid = last_rowid
+
+    if not os.path.exists(db_path):
+        return actions, new_last_rowid
+
+    try:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+
+
+        cursor.execute("""
+            SELECT rowid, user_id, action, info
+            FROM trace
+            WHERE rowid > ?
+            ORDER BY rowid ASC
+        """, (last_rowid,))
+
+        for rowid, user_id, action, info_json in cursor.fetchall():
+
+            new_last_rowid = rowid
+
+
+            if action in FILTERED_ACTIONS:
+                continue
+
+
+            try:
+                action_args = json.loads(info_json) if info_json else {}
+            except json.JSONDecodeError:
+                action_args = {}
+
+
+            simplified_args = {}
+            if 'content' in action_args:
+                simplified_args['content'] = action_args['content']
+            if 'post_id' in action_args:
+                simplified_args['post_id'] = action_args['post_id']
+            if 'comment_id' in action_args:
+                simplified_args['comment_id'] = action_args['comment_id']
+            if 'quoted_id' in action_args:
+                simplified_args['quoted_id'] = action_args['quoted_id']
+            if 'new_post_id' in action_args:
+                simplified_args['new_post_id'] = action_args['new_post_id']
+            if 'follow_id' in action_args:
+                simplified_args['follow_id'] = action_args['follow_id']
+            if 'query' in action_args:
+                simplified_args['query'] = action_args['query']
+            if 'like_id' in action_args:
+                simplified_args['like_id'] = action_args['like_id']
+            if 'dislike_id' in action_args:
+                simplified_args['dislike_id'] = action_args['dislike_id']
+
+
+            action_type = ACTION_TYPE_MAP.get(action, action.upper())
+
+
+            _enrich_action_context(cursor, action_type, simplified_args, agent_names)
+
+            actions.append({
+                'agent_id': user_id,
+                'agent_name': agent_names.get(user_id, f'Agent_{user_id}'),
+                'action_type': action_type,
+                'action_args': simplified_args,
+            })
+
+        conn.close()
+    except Exception as e:
+        print(f"读取数据库动作失败: {e}")
+
+    return actions, new_last_rowid
+
+
+def _enrich_action_context(
+    cursor,
+    action_type: str,
+    action_args: Dict[str, Any],
+    agent_names: Dict[int, str]
+) -> None:
+    try:
+
+        if action_type in ('LIKE_POST', 'DISLIKE_POST'):
+            post_id = action_args.get('post_id')
+            if post_id:
+                post_info = _get_post_info(cursor, post_id, agent_names)
+                if post_info:
+                    action_args['post_content'] = post_info.get('content', '')
+                    action_args['post_author_name'] = post_info.get('author_name', '')
+                    if post_info.get('agent_id') is not None:
+                        action_args['post_author_agent_id'] = post_info.get('agent_id')
+
+
+        elif action_type == 'REPOST':
+            new_post_id = action_args.get('new_post_id')
+            if new_post_id:
+
+                cursor.execute("""
+                    SELECT original_post_id FROM post WHERE post_id = ?
+                """, (new_post_id,))
+                row = cursor.fetchone()
+                if row and row[0]:
+                    original_post_id = row[0]
+                    original_info = _get_post_info(cursor, original_post_id, agent_names)
+                    if original_info:
+                        action_args['original_content'] = original_info.get('content', '')
+                        action_args['original_author_name'] = original_info.get('author_name', '')
+                        if original_info.get('agent_id') is not None:
+                            action_args['original_author_agent_id'] = original_info.get('agent_id')
+
+
+        elif action_type == 'QUOTE_POST':
+            quoted_id = action_args.get('quoted_id')
+            new_post_id = action_args.get('new_post_id')
+
+            if quoted_id:
+                original_info = _get_post_info(cursor, quoted_id, agent_names)
+                if original_info:
+                    action_args['original_content'] = original_info.get('content', '')
+                    action_args['original_author_name'] = original_info.get('author_name', '')
+                    if original_info.get('agent_id') is not None:
+                        action_args['original_author_agent_id'] = original_info.get('agent_id')
+
+
+            if new_post_id:
+                cursor.execute("""
+                    SELECT quote_content FROM post WHERE post_id = ?
+                """, (new_post_id,))
+                row = cursor.fetchone()
+                if row and row[0]:
+                    action_args['quote_content'] = row[0]
+
+
+        elif action_type == 'FOLLOW':
+            follow_id = action_args.get('follow_id')
+            if follow_id:
+
+                cursor.execute("""
+                    SELECT followee_id FROM follow WHERE follow_id = ?
+                """, (follow_id,))
+                row = cursor.fetchone()
+                if row:
+                    followee_id = row[0]
+                    target_info = _get_user_info(cursor, followee_id, agent_names)
+                    if target_info:
+                        if target_info.get('name'):
+                            action_args['target_user_name'] = target_info['name']
+                        if target_info.get('agent_id') is not None:
+                            action_args['target_agent_id'] = target_info['agent_id']
+
+
+        elif action_type == 'MUTE':
+
+            target_id = action_args.get('user_id') or action_args.get('target_id')
+            if target_id:
+                target_info = _get_user_info(cursor, target_id, agent_names)
+                if target_info:
+                    if target_info.get('name'):
+                        action_args['target_user_name'] = target_info['name']
+                    if target_info.get('agent_id') is not None:
+                        action_args['target_agent_id'] = target_info['agent_id']
+
+
+        elif action_type in ('LIKE_COMMENT', 'DISLIKE_COMMENT'):
+            comment_id = action_args.get('comment_id')
+            if comment_id:
+                comment_info = _get_comment_info(cursor, comment_id, agent_names)
+                if comment_info:
+                    action_args['comment_content'] = comment_info.get('content', '')
+                    action_args['comment_author_name'] = comment_info.get('author_name', '')
+                    if comment_info.get('agent_id') is not None:
+                        action_args['comment_author_agent_id'] = comment_info.get('agent_id')
+
+
+        elif action_type == 'CREATE_COMMENT':
+            comment_id = action_args.get('comment_id')
+            if comment_id:
+                comment_info = _get_comment_info(cursor, comment_id, agent_names)
+                if comment_info:
+                    action_args['comment_content'] = comment_info.get('content', '')
+                    action_args['comment_author_name'] = comment_info.get('author_name', '')
+                    action_args['post_id'] = comment_info.get('post_id')
+                    if comment_info.get('parent_comment_id') is not None:
+                        action_args['parent_comment_id'] = comment_info.get('parent_comment_id')
+                    if comment_info.get('parent_author_name'):
+                        action_args['parent_author_name'] = comment_info.get('parent_author_name')
+                    if comment_info.get('agent_id') is not None:
+                        action_args['comment_author_agent_id'] = comment_info.get('agent_id')
+            post_id = action_args.get('post_id')
+            if post_id:
+                post_info = _get_post_info(cursor, post_id, agent_names)
+                if post_info:
+                    action_args['post_content'] = post_info.get('content', '')
+                    action_args['post_author_name'] = post_info.get('author_name', '')
+                    if post_info.get('agent_id') is not None:
+                        action_args['post_author_agent_id'] = post_info.get('agent_id')
+
+    except Exception as e:
+
+        print(f"补充动作上下文失败: {e}")
+
+
+def _get_post_info(
+    cursor,
+    post_id: int,
+    agent_names: Dict[int, str]
+) -> Optional[Dict[str, Any]]:
+    try:
+        cursor.execute("""
+            SELECT p.content, p.user_id, u.agent_id
+            FROM post p
+            LEFT JOIN user u ON p.user_id = u.user_id
+            WHERE p.post_id = ?
+        """, (post_id,))
+        row = cursor.fetchone()
+        if row:
+            content = row[0] or ''
+            user_id = row[1]
+            agent_id = row[2]
+
+
+            author_name = ''
+            if agent_id is not None and agent_id in agent_names:
+                author_name = agent_names[agent_id]
+            elif user_id:
+
+                cursor.execute("SELECT name, user_name FROM user WHERE user_id = ?", (user_id,))
+                user_row = cursor.fetchone()
+                if user_row:
+                    author_name = user_row[0] or user_row[1] or ''
+
+            return {'content': content, 'author_name': author_name, 'agent_id': agent_id}
+    except Exception:
+        pass
+    return None
+
+
+def _get_user_info(
+    cursor,
+    user_id: int,
+    agent_names: Dict[int, str]
+) -> Optional[Dict[str, Any]]:
+    try:
+        cursor.execute("""
+            SELECT agent_id, name, user_name FROM user WHERE user_id = ?
+        """, (user_id,))
+        row = cursor.fetchone()
+        if row:
+            agent_id = row[0]
+            name = row[1]
+            user_name = row[2]
+
+
+            resolved_name = ''
+            if agent_id is not None and agent_id in agent_names:
+                resolved_name = agent_names[agent_id]
+            else:
+                resolved_name = name or user_name or ''
+
+            return {
+                "name": resolved_name,
+                "agent_id": int(agent_id) if agent_id is not None else None,
+            }
+    except Exception:
+        pass
+    return None
+
+
+def _get_user_name(
+    cursor,
+    user_id: int,
+    agent_names: Dict[int, str]
+) -> Optional[str]:
+    user = _get_user_info(cursor, user_id, agent_names)
+    if not user:
+        return None
+    return user.get("name") or None
+
+
+def _get_comment_info(
+    cursor,
+    comment_id: int,
+    agent_names: Dict[int, str]
+) -> Optional[Dict[str, Any]]:
+    try:
+        cursor.execute("""
+            SELECT c.content, c.user_id, u.agent_id, c.post_id, c.created_at
+            FROM comment c
+            LEFT JOIN user u ON c.user_id = u.user_id
+            WHERE c.comment_id = ?
+        """, (comment_id,))
+        row = cursor.fetchone()
+        if row:
+            content = row[0] or ''
+            user_id = row[1]
+            agent_id = row[2]
+            post_id = row[3]
+            created_at = row[4]
+
+
+            author_name = ''
+            if agent_id is not None and agent_id in agent_names:
+                author_name = agent_names[agent_id]
+            elif user_id:
+
+                cursor.execute("SELECT name, user_name FROM user WHERE user_id = ?", (user_id,))
+                user_row = cursor.fetchone()
+                if user_row:
+                    author_name = user_row[0] or user_row[1] or ''
+
+            parent_comment_id = None
+            parent_author_name = ''
+            if post_id is not None:
+                cursor.execute("""
+                    SELECT c.comment_id, c.user_id, u.agent_id
+                    FROM comment c
+                    LEFT JOIN user u ON c.user_id = u.user_id
+                    WHERE c.post_id = ? AND c.comment_id < ?
+                    ORDER BY c.comment_id DESC
+                    LIMIT 1
+                """, (post_id, comment_id))
+                parent_row = cursor.fetchone()
+                if parent_row:
+                    parent_comment_id = parent_row[0]
+                    parent_user_id = parent_row[1]
+                    parent_agent_id = parent_row[2]
+                    if parent_agent_id is not None and parent_agent_id in agent_names:
+                        parent_author_name = agent_names[parent_agent_id]
+                    elif parent_user_id:
+                        cursor.execute("SELECT name, user_name FROM user WHERE user_id = ?", (parent_user_id,))
+                        parent_user_row = cursor.fetchone()
+                        if parent_user_row:
+                            parent_author_name = parent_user_row[0] or parent_user_row[1] or ''
+
+            return {
+                'content': content,
+                'author_name': author_name,
+                'agent_id': agent_id,
+                'post_id': post_id,
+                'created_at': created_at,
+                'parent_comment_id': parent_comment_id,
+                'parent_author_name': parent_author_name,
+            }
+    except Exception:
+        pass
+    return None
+
+
+def create_model(config: Dict[str, Any], use_boost: bool = False):
+
+    boost_api_key = os.environ.get("LLM_BOOST_API_KEY", "")
+    boost_base_url = os.environ.get("LLM_BOOST_BASE_URL", "")
+    boost_model = os.environ.get("LLM_BOOST_MODEL_NAME", "")
+    has_boost_config = bool(boost_api_key)
+
+    try:
+        from lightworld.config.settings import Config as AppConfig
+    except Exception:
+        AppConfig = None
+
+
+    if use_boost and has_boost_config:
+
+        llm_api_key = boost_api_key
+        llm_base_url = boost_base_url
+        llm_model = boost_model or os.environ.get("LLM_MODEL_NAME", "")
+        config_label = "[加速LLM]"
+    else:
+
+        llm_api_key = os.environ.get("LLM_API_KEY", "")
+        llm_base_url = os.environ.get("LLM_BASE_URL", "")
+        llm_model = os.environ.get("LLM_MODEL_NAME", "")
+        if AppConfig is not None:
+            llm_api_key = llm_api_key or getattr(AppConfig, "LLM_API_KEY", "")
+            llm_base_url = llm_base_url or getattr(AppConfig, "LLM_BASE_URL", "")
+            llm_model = llm_model or getattr(AppConfig, "LLM_MODEL_NAME", "")
+        config_label = "[通用LLM]"
+
+
+    if not llm_model:
+        llm_model = config.get("llm_model", "gpt-4o-mini")
+
+
+    if llm_api_key:
+        os.environ["OPENAI_API_KEY"] = llm_api_key
+
+    if not os.environ.get("OPENAI_API_KEY"):
+        raise ValueError("缺少 API Key 配置，请在项目根目录 .env 文件中设置 LLM_API_KEY")
+
+    if llm_base_url:
+        os.environ["OPENAI_API_BASE_URL"] = llm_base_url
+
+
+    token_counter = OfflineApproxTokenCounter()
+
+    print(f"{config_label} model={llm_model}, base_url={llm_base_url[:40] if llm_base_url else '默认'}...")
+
+    return ModelFactory.create(
+        model_platform=ModelPlatformType.OPENAI,
+        model_type=llm_model,
+        token_counter=token_counter,
+    )
+
+
+async def main():
+    parser = argparse.ArgumentParser(description='OASIS双平台并行模拟')
+    parser.add_argument(
+        '--config',
+        type=str,
+        required=True,
+        help='配置文件路径 (simulation_config.json)'
+    )
+    parser.add_argument(
+        '--twitter-only',
+        action='store_true',
+        help='只运行Twitter模拟'
+    )
+    parser.add_argument(
+        '--reddit-only',
+        action='store_true',
+        help='只运行Reddit模拟'
+    )
+    parser.add_argument(
+        '--max-rounds',
+        type=int,
+        default=None,
+        help='最大模拟轮数（可选，用于截断过长的模拟）'
+    )
+    parser.add_argument(
+        '--no-wait',
+        action='store_true',
+        default=False,
+        help='模拟完成后立即关闭环境，不进入等待命令模式'
+    )
+    parser.add_argument(
+        '--light-mode',
+        action='store_true',
+        help='启用轻量模拟模式（降低每轮激活规模，并默认启用topology-aware）'
+    )
+    parser.add_argument(
+        '--topology-aware',
+        action='store_true',
+        help='强制启用 topology-aware 更新策略（coordination+differentiation）'
+    )
+    parser.add_argument(
+        '--cluster-method',
+        choices=[CLUSTER_METHOD_THRESHOLD, CLUSTER_METHOD_LLM_KEYWORD],
+        default=None,
+        help='覆盖本次运行的 cluster 方法；未指定时，交互终端会提示选择。',
+    )
+
+    args = parser.parse_args()
+
+
+    global _shutdown_event
+    _shutdown_event = asyncio.Event()
+
+    if not os.path.exists(args.config):
+        print(f"错误: 配置文件不存在: {args.config}")
+        sys.exit(1)
+
+    config = load_config(args.config)
+    selected_cluster_method = maybe_prompt_cluster_method(
+        args.cluster_method,
+        detect_cluster_method(config),
+    )
+    if selected_cluster_method:
+        apply_cluster_method_to_simulation_config(config, selected_cluster_method)
+        _write_json_file(args.config, config)
+        print(f"[Config] cluster 方法: {describe_cluster_method(selected_cluster_method)}")
+    simulation_dir = os.path.dirname(args.config) or "."
+    wait_for_commands = not args.no_wait
+    status_handler = ParallelIPCHandler(simulation_dir=simulation_dir)
+    status_handler.update_status("starting")
+    selected_platforms = (
+        ["twitter"] if args.twitter_only else
+        ["reddit"] if args.reddit_only else
+        ["twitter", "reddit"]
+    )
+    platform_statuses = {
+        "twitter": "disabled" if "twitter" not in selected_platforms else "starting",
+        "reddit": "disabled" if "reddit" not in selected_platforms else "starting",
+    }
+    platform_rounds = {"twitter": 0, "reddit": 0}
+
+    def on_platform_state(platform: str, status: str, current_round: int = 0, error: Optional[str] = None):
+        platform_statuses[platform] = status
+        platform_rounds[platform] = max(platform_rounds.get(platform, 0), int(current_round or 0))
+        _update_simulation_state_file(
+            simulation_dir=simulation_dir,
+            selected_platforms=selected_platforms,
+            platform_statuses=platform_statuses,
+            platform_rounds=platform_rounds,
+            error=error if status == "failed" else _STATE_UNSET,
+        )
+
+    _update_simulation_state_file(
+        simulation_dir=simulation_dir,
+        selected_platforms=selected_platforms,
+        platform_statuses=platform_statuses,
+        platform_rounds=platform_rounds,
+        error=None,
+    )
+
+
+    if args.light_mode:
+        light_cfg = config.get("light_mode", {}) or {}
+        light_cfg["enabled"] = True
+        light_cfg.setdefault("agent_ratio", 0.6)
+        config["light_mode"] = light_cfg
+
+        topo_cfg = config.get("topology_aware", {}) or {}
+        topo_cfg.setdefault("enabled", True)
+        topo_cfg.setdefault("coordination_enabled", True)
+        topo_cfg.setdefault("differentiation_enabled", True)
+        config["topology_aware"] = topo_cfg
+
+    if args.topology_aware:
+        topo_cfg = config.get("topology_aware", {}) or {}
+        topo_cfg["enabled"] = True
+        config["topology_aware"] = topo_cfg
+    try:
+        topo_cfg = normalize_topology_cluster_config(config)
+    except ValueError as exc:
+        print(f"Configuration error: {exc}")
+        for platform in selected_platforms:
+            platform_statuses[platform] = "failed"
+        _update_simulation_state_file(
+            simulation_dir=simulation_dir,
+            selected_platforms=selected_platforms,
+            platform_statuses=platform_statuses,
+            platform_rounds=platform_rounds,
+            error=str(exc),
+        )
+        status_handler.update_status("failed")
+        sys.exit(2)
+
+
+    init_logging_for_simulation(simulation_dir)
+
+
+    log_manager = SimulationLogManager(simulation_dir)
+    twitter_logger = log_manager.get_twitter_logger()
+    reddit_logger = log_manager.get_reddit_logger()
+
+    log_manager.info("=" * 60)
+    log_manager.info("OASIS 双平台并行模拟")
+    log_manager.info(f"配置文件: {args.config}")
+    log_manager.info(f"模拟ID: {config.get('simulation_id', 'unknown')}")
+    log_manager.info(f"等待命令模式: {'启用' if wait_for_commands else '禁用'}")
+    log_manager.info(f"light模式: {'启用' if (config.get('light_mode', {}) or {}).get('enabled', False) else '禁用'}")
+    log_manager.info(f"topology-aware: {'启用' if (config.get('topology_aware', {}) or {}).get('enabled', False) else '禁用'}")
+    log_manager.info(
+        "cluster features: threshold=%s, llm_keyword=%s",
+        bool(topo_cfg.get("threshold_cluster_enabled", False)),
+        bool(topo_cfg.get("llm_keyword_cluster_enabled", False)),
+    )
+    log_manager.info(f"simplemem: {'启用' if (config.get('simplemem', {}) or {}).get('enabled', True) else '禁用'}")
+    log_manager.info("=" * 60)
+
+    time_config = config.get("time_config", {})
+    total_hours = time_config.get('total_simulation_hours', 72)
+    minutes_per_round = time_config.get('minutes_per_round', 30)
+    config_total_rounds = (total_hours * 60) // minutes_per_round
+
+    log_manager.info(f"模拟参数:")
+    log_manager.info(f"  - 总模拟时长: {total_hours}小时")
+    log_manager.info(f"  - 每轮时间: {minutes_per_round}分钟")
+    log_manager.info(f"  - 配置总轮数: {config_total_rounds}")
+    if args.max_rounds:
+        log_manager.info(f"  - 最大轮数限制: {args.max_rounds}")
+        if args.max_rounds < config_total_rounds:
+            log_manager.info(f"  - 实际执行轮数: {args.max_rounds} (已截断)")
+    log_manager.info(f"  - Agent数量: {len(config.get('agent_configs', []))}")
+
+    log_manager.info("日志结构:")
+    log_manager.info(f"  - 主日志: simulation.log")
+    log_manager.info(f"  - Twitter动作: twitter/actions.jsonl")
+    log_manager.info(f"  - Reddit动作: reddit/actions.jsonl")
+    log_manager.info("=" * 60)
+
+    start_time = datetime.now()
+
+
+    twitter_result: Optional[PlatformSimulation] = None
+    reddit_result: Optional[PlatformSimulation] = None
+
+    try:
+        if args.twitter_only:
+            twitter_result = await run_platform_simulation(
+                spec=TWITTER_SPEC,
+                config=config,
+                simulation_dir=simulation_dir,
+                action_logger=twitter_logger,
+                main_logger=log_manager,
+                max_rounds=args.max_rounds,
+                create_model_fn=create_model,
+                get_agent_names_fn=get_agent_names_from_config,
+                fetch_actions_fn=fetch_new_actions_from_db,
+                shutdown_event=_shutdown_event,
+                state_update_fn=on_platform_state,
+            )
+        elif args.reddit_only:
+            reddit_result = await run_platform_simulation(
+                spec=REDDIT_SPEC,
+                config=config,
+                simulation_dir=simulation_dir,
+                action_logger=reddit_logger,
+                main_logger=log_manager,
+                max_rounds=args.max_rounds,
+                create_model_fn=create_model,
+                get_agent_names_fn=get_agent_names_from_config,
+                fetch_actions_fn=fetch_new_actions_from_db,
+                shutdown_event=_shutdown_event,
+                state_update_fn=on_platform_state,
+            )
+        else:
+
+            results = await asyncio.gather(
+                run_platform_simulation(
+                    spec=TWITTER_SPEC,
+                    config=config,
+                    simulation_dir=simulation_dir,
+                    action_logger=twitter_logger,
+                    main_logger=log_manager,
+                    max_rounds=args.max_rounds,
+                    create_model_fn=create_model,
+                    get_agent_names_fn=get_agent_names_from_config,
+                    fetch_actions_fn=fetch_new_actions_from_db,
+                    shutdown_event=_shutdown_event,
+                    state_update_fn=on_platform_state,
+                ),
+                run_platform_simulation(
+                    spec=REDDIT_SPEC,
+                    config=config,
+                    simulation_dir=simulation_dir,
+                    action_logger=reddit_logger,
+                    main_logger=log_manager,
+                    max_rounds=args.max_rounds,
+                    create_model_fn=create_model,
+                    get_agent_names_fn=get_agent_names_from_config,
+                    fetch_actions_fn=fetch_new_actions_from_db,
+                    shutdown_event=_shutdown_event,
+                    state_update_fn=on_platform_state,
+                ),
+            )
+            twitter_result, reddit_result = results
+    except Exception as exc:
+        for platform in selected_platforms:
+            if platform_statuses.get(platform) in {"starting", "running"}:
+                platform_statuses[platform] = "failed"
+        _update_simulation_state_file(
+            simulation_dir=simulation_dir,
+            selected_platforms=selected_platforms,
+            platform_statuses=platform_statuses,
+            platform_rounds=platform_rounds,
+            error=str(exc),
+        )
+        status_handler.update_status("failed")
+        raise
+
+    total_elapsed = (datetime.now() - start_time).total_seconds()
+    log_manager.info("=" * 60)
+    log_manager.info(f"模拟循环完成! 总耗时: {total_elapsed:.1f}秒")
+
+    status_handler.twitter_env = twitter_result.env if twitter_result else None
+    status_handler.twitter_agent_graph = twitter_result.agent_graph if twitter_result else None
+    status_handler.reddit_env = reddit_result.env if reddit_result else None
+    status_handler.reddit_agent_graph = reddit_result.agent_graph if reddit_result else None
+    status_handler.update_status("running")
+
+
+    if wait_for_commands:
+        log_manager.info("")
+        log_manager.info("=" * 60)
+        log_manager.info("进入等待命令模式 - 环境保持运行")
+        log_manager.info("支持的命令: interview, batch_interview, close_env")
+        log_manager.info("=" * 60)
+
+
+        ipc_handler = status_handler
+        ipc_handler.update_status("alive")
+
+
+        try:
+            while not _shutdown_event.is_set():
+                should_continue = await ipc_handler.process_commands()
+                if not should_continue:
+                    break
+
+                try:
+                    await asyncio.wait_for(_shutdown_event.wait(), timeout=0.5)
+                    break
+                except asyncio.TimeoutError:
+                    pass
+        except KeyboardInterrupt:
+            print("\n收到中断信号")
+        except asyncio.CancelledError:
+            print("\n任务被取消")
+        except Exception as e:
+            print(f"\n命令处理出错: {e}")
+
+        log_manager.info("\n关闭环境...")
+        ipc_handler.update_status("stopped")
+
+
+    if twitter_result and twitter_result.env:
+        await twitter_result.env.close()
+        log_manager.info("[Twitter] 环境已关闭")
+
+    if reddit_result and reddit_result.env:
+        await reddit_result.env.close()
+        log_manager.info("[Reddit] 环境已关闭")
+
+    status_handler.update_status("stopped")
+
+    log_manager.info("=" * 60)
+    log_manager.info(f"全部完成!")
+    log_manager.info(f"日志文件:")
+    log_manager.info(f"  - {os.path.join(simulation_dir, 'simulation.log')}")
+    log_manager.info(f"  - {os.path.join(simulation_dir, 'twitter', 'actions.jsonl')}")
+    log_manager.info(f"  - {os.path.join(simulation_dir, 'reddit', 'actions.jsonl')}")
+    log_manager.info("=" * 60)
+
+
+def setup_signal_handlers(loop=None):
+    def signal_handler(signum, frame):
+        global _cleanup_done
+        sig_name = "SIGTERM" if signum == signal.SIGTERM else "SIGINT"
+        print(f"\n收到 {sig_name} 信号，正在退出...")
+
+        if not _cleanup_done:
+            _cleanup_done = True
+
+            if _shutdown_event:
+                _shutdown_event.set()
+
+
+        else:
+            print("强制退出...")
+            sys.exit(1)
+
+    signal.signal(signal.SIGTERM, signal_handler)
+    signal.signal(signal.SIGINT, signal_handler)
+
+
+if __name__ == "__main__":
+    setup_signal_handlers()
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("\n程序被中断")
+    except SystemExit:
+        pass
+    finally:
+
+        try:
+            from multiprocessing import resource_tracker
+            resource_tracker._resource_tracker._stop()
+        except Exception:
+            pass
+        print("模拟进程已退出")

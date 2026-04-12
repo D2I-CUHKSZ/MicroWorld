@@ -2,23 +2,46 @@
 .env
 backend/.env
 backend/app/setting/settings_local.py
+src/lightworld/config/settings_local.py
 
 # Python caches
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
+*.egg-info/
+dist/
+build/
+.eggs/
 
 # Local logs
 log/
+logs/
 backend/log/
 backend/logs/
 
-# Generated runtime artifacts kept locally
+# Generated runtime artifacts
 backend/uploads/
 output/
 backend/input2graph/projects/
 experiments/run_*/
+data/generated/*
+!data/generated/.gitkeep
+runs/
+tmp/*
+!tmp/.gitkeep
 
 # Local databases
 *.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# macOS
+.DS_Store
+
+# uv
+.venv/

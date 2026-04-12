@@ -7,9 +7,9 @@
 **A lightweight multi-modal social simulation engine for public-event analysis, topology-aware runtime scheduling, memory-efficient execution, and report generation.**
 
 [![Project Site](https://img.shields.io/badge/Project%20Site-GitHub%20Pages-0f766e?style=for-the-badge&logo=githubpages&logoColor=white)](https://jaylzhou.github.io/LightWorld/)
-[![Python](https://img.shields.io/badge/Python-3.11%2B-2563eb?style=for-the-badge&logo=python&logoColor=white)](backend/pyproject.toml)
+[![Python](https://img.shields.io/badge/Python-3.11%2B-2563eb?style=for-the-badge&logo=python&logoColor=white)](pyproject.toml)
 [![License](https://img.shields.io/badge/License-AGPL--3.0-111827?style=for-the-badge&logo=opensourceinitiative&logoColor=white)](LICENSE)
-[![Backend](https://img.shields.io/badge/Backend-Flask-16a34a?style=for-the-badge&logo=flask&logoColor=white)](backend/app/run/api.py)
+[![Backend](https://img.shields.io/badge/Backend-Flask-16a34a?style=for-the-badge&logo=flask&logoColor=white)](src/lightworld/cli/api.py)
 [![Inputs](https://img.shields.io/badge/Inputs-Text%20%7C%20Image%20%7C%20Video%20%7C%20Graph-f97316?style=for-the-badge)](#what-lightworld-does)
 
 [Project Site](https://jaylzhou.github.io/LightWorld/) ·
@@ -118,10 +118,9 @@ LLM_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
 LLM_MODEL_NAME=qwen-plus
 ```
 
-### 3. Install backend dependencies
+### 3. Install dependencies
 
 ```bash
-cd backend
 uv sync
 ```
 
@@ -136,16 +135,15 @@ By default, the Flask service reads `FLASK_HOST`, `FLASK_PORT`, and `FLASK_DEBUG
 ### 5. Run the included end-to-end sample
 
 ```bash
-cd backend
 uv run lightworld-full-run \
-  --config ../multimodal_inputs/baike_wuda_event/full_run.config.json
+  --config configs/full_run/full_run.template.json
 ```
 
 If you want a non-interactive topology clustering choice, pass one of the supported cluster modes:
 
 ```bash
 uv run lightworld-full-run \
-  --config ../multimodal_inputs/baike_wuda_event/full_run.config.json \
+  --config configs/full_run/full_run.template.json \
   --cluster-method threshold
 ```
 
@@ -153,35 +151,53 @@ uv run lightworld-full-run \
 
 ```bash
 # Start the Flask backend.
-cd backend
 uv run lightworld-api
 
 # Build a local multimodal graph pipeline.
-uv run lightworld-local-pipeline --config ../multimodal_inputs/baike_wuda_event/local_pipeline_full.json
+uv run lightworld-local-pipeline --config configs/local_pipeline/whu_baike_event.json
 
 # Run a prepared simulation config.
 uv run lightworld-parallel-sim --config /abs/path/to/simulation_config.json
 
 # Run ingestion, preparation, simulation, and optional report generation.
-uv run lightworld-full-run --config ../multimodal_inputs/baike_wuda_event/full_run.config.json
+uv run lightworld-full-run --config configs/full_run/full_run.template.json
 ```
 
 ## Repository Layout
 
 ```text
 LightWorld/
-  backend/
-    app/
-      application/        # end-to-end orchestration services
-      modules/graph/      # local multimodal graph pipeline
-      modules/simulation/ # topology-aware runtime and platform runners
-      run/                # CLI entry points exposed by pyproject scripts
-      utils/              # ingestion, graph, profile, config, and report helpers
-    run_scripts/          # compatibility and platform-specific runners
-    input2graph/          # sample graph and experiment artifacts
-  docs/                   # GitHub Pages project site
-  multimodal_inputs/      # WHU multimodal demo package
-  event_inputs/           # extracted event pipeline outputs
+  pyproject.toml              # project metadata, dependencies, CLI entry points
+  src/
+    lightworld/               # the main importable Python package
+      api/                    # Flask HTTP routes (graph, simulation, report)
+      application/            # end-to-end orchestration services
+      cli/                    # CLI entry points (api, full_run, local_pipeline, parallel_sim)
+      config/                 # settings and environment configuration
+      domain/                 # core domain models (project, task)
+      graph/                  # graph pipeline, ontology, Zep integration
+      ingestion/              # multimodal ingestion, file parsing, text processing
+      infrastructure/         # LLM client, retry utilities
+      memory/                 # Zep paging and memory utilities
+      reporting/              # report agent and report management
+      simulation/             # OASIS simulation runtime, topology, platform runners
+      storage/                # repositories (project, report, simulation state)
+      telemetry/              # logging configuration
+      tools/                  # entity prompt extraction
+  configs/                    # reusable configuration templates
+    full_run/                 # full pipeline run configs
+    simulation/               # simulation-specific configs
+    local_pipeline/           # local graph pipeline configs
+  data/
+    examples/                 # checked-in demo input data
+    generated/                # runtime-generated data (gitignored)
+  docs/                       # GitHub Pages project site
+  scripts/                    # developer utilities and data scripts
+  tests/                      # unit and integration tests
+    unit/
+    integration/
+  examples/                   # example run instructions with README
+  backend/                    # legacy backend (preserved for compatibility)
 ```
 
 ## Generated Artifacts
@@ -211,12 +227,11 @@ LightWorld is currently best understood as a repository-backed research and prot
 ## Development Notes
 
 ```bash
-cd backend
 uv sync --group dev
 uv run pytest
 ```
 
-The repository also includes targeted test scripts under `backend/test_scripts/` for individual pipeline modules.
+Tests are organized under `tests/unit/` for unit tests and `tests/integration/` for component-level integration tests.
 
 ## License
 
