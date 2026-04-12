@@ -89,21 +89,21 @@ def maybe_prompt_cluster_method(requested_method: Optional[str], current_method:
     default_method = current_method or CLUSTER_METHOD_THRESHOLD
     default_choice = "1" if default_method == CLUSTER_METHOD_THRESHOLD else "2"
 
-    print("请选择本次运行使用的 cluster 方法：", flush=True)
+    print("Select the cluster method for this run:", flush=True)
     print("  1) threshold_only", flush=True)
-    print("     按观点/影响/结构阈值分组，速度更快，结果更稳定。", flush=True)
+    print("     Groups by opinion/influence/structure thresholds. Faster and more stable.", flush=True)
     print("  2) llm_keyword_consistency", flush=True)
-    print("     额外使用 LLM 做关键词语义一致性分组，语义更强，但更慢。", flush=True)
+    print("     Additionally uses LLM for keyword semantic consistency grouping. Stronger semantics but slower.", flush=True)
 
     while True:
-        raw = input(f"请输入 1 或 2 [{default_choice}]: ").strip().lower()
+        raw = input(f"Enter 1 or 2 [{default_choice}]: ").strip().lower()
         if not raw:
             return default_method
         if raw in {"1", "threshold", "threshold_only"}:
             return CLUSTER_METHOD_THRESHOLD
         if raw in {"2", "llm", "llm_keyword", "llm_keyword_consistency"}:
             return CLUSTER_METHOD_LLM_KEYWORD
-        print("输入无效，请重新选择 1 或 2。", flush=True)
+        print("Invalid input. Please enter 1 or 2.", flush=True)
 
 
 def describe_cluster_method(method: Optional[str]) -> str:

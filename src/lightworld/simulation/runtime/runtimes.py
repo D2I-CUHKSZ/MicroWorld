@@ -43,9 +43,9 @@ def _cosine_similarity(vec_a: List[float], vec_b: List[float]) -> float:
 
 class TopologyAwareRuntime:
     """
-    TopoSim-lite 运行时：
-    1) Coordination: 结构相似 + 状态相近的 Agent 进行单元级激活，降低冗余推理
-    2) Differentiation: 使用拓扑重要性调制激活概率，恢复非对称影响
+    TopoSim-lite runtime:
+    1) Coordination: Unit-level activation for structurally similar agents with close states, reducing redundant inference
+    2) Differentiation: Modulate activation probability via topological importance, restoring asymmetric influence
     """
 
     def __init__(
@@ -72,7 +72,7 @@ class TopologyAwareRuntime:
         self.importance_alpha = max(0.0, _safe_float(topo_cfg.get("importance_alpha", 0.7), 0.7))
         self.sentiment_diff_threshold = _safe_float(topo_cfg.get("sentiment_diff_threshold", 0.35), 0.35)
 
-        # 参考 struc2vec_cluster/test/cluster.py 的聚类阈值
+        # Clustering thresholds (cf. struc2vec_cluster/test/cluster.py)
         self.opinion_threshold = _safe_float(topo_cfg.get("opinion_threshold", 0.5), 0.5)
         self.stubbornness_threshold = _safe_float(topo_cfg.get("stubbornness_threshold", 0.5), 0.5)
         self.influence_threshold = _safe_float(topo_cfg.get("influence_threshold", 0.5), 0.5)
@@ -123,7 +123,7 @@ class TopologyAwareRuntime:
         self.light_enabled = bool(light_cfg.get("enabled", False))
         self.light_agent_ratio = min(1.0, max(0.1, _safe_float(light_cfg.get("agent_ratio", 0.6), 0.6)))
 
-        # light 模式默认启用 topology-aware（除非显式关闭）
+        # Light mode enables topology-aware by default (unless explicitly disabled)
         if self.light_enabled and "enabled" not in topo_cfg:
             self.enabled = True
 
@@ -186,7 +186,7 @@ class TopologyAwareRuntime:
         if self.enabled:
             avg_unit = (sum(len(u) for u in self.units) / max(len(self.units), 1)) if self.units else 1.0
             self.log(
-                f"Topology-aware已启用: coordination={self.coordination_enabled}, "
+                f"Topology-aware enabled: coordination={self.coordination_enabled}, "
                 f"differentiation={self.differentiation_enabled}, "
                 f"units={len(self.units)}, avg_unit_size={avg_unit:.2f}, "
                 f"light={self.light_enabled}, top_pairs={len(self.top_pairs)}, "
@@ -444,7 +444,7 @@ class TopologyAwareRuntime:
                                 pass
                         data[int(agent_id)] = row
             except Exception as e:
-                self.log(f"读取twitter_profiles.csv失败: {e}")
+                self.log(f"Failed to read twitter_profiles.csv: {e}")
             return data
 
         path = os.path.join(self.simulation_dir, "reddit_profiles.json")
@@ -460,11 +460,11 @@ class TopologyAwareRuntime:
                     agent_id = row.get("user_id", idx)
                     data[int(agent_id)] = row
         except Exception as e:
-            self.log(f"读取reddit_profiles.json失败: {e}")
+            self.log(f"Failed to read reddit_profiles.json: {e}")
         return data
 
     def _load_entity_prompts(self):
-        """读取 simulation_dir 下的 entity_prompts.json，并映射到 agent_id。"""
+        """Read entity_prompts.json from simulation_dir and map to agent_id."""
         config_file = self.config.get("entity_prompts_file", "entity_prompts.json")
         prompt_path = os.path.join(self.simulation_dir, config_file)
         if not os.path.exists(prompt_path):
@@ -474,7 +474,7 @@ class TopologyAwareRuntime:
             with open(prompt_path, "r", encoding="utf-8") as f:
                 rows = json.load(f)
         except Exception as e:
-            self.log(f"读取 entity prompts 失败: {e}")
+            self.log(f"Failed to read entity prompts: {e}")
             return
 
         if not isinstance(rows, list):
@@ -527,15 +527,15 @@ class TopologyAwareRuntime:
         strong_pos = [
             "follow", "ally", "alliance", "support", "cooperate", "collaborate",
             "partner", "friend", "trust", "endorse", "retweet", "repost", "quote",
-            "关注", "支持", "合作", "联盟", "信任", "转发", "引用",
+            "关注", "支持", "合作", "联盟", "信任", "转发", "引用",  # Chinese: follow, support, cooperate, alliance, trust, repost, quote
         ]
         weak_pos = [
             "mention", "related", "associate", "connect", "work with",
-            "提及", "关联", "联系",
+            "提及", "关联", "联系",  # Chinese: mention, relate, connect
         ]
         neg = [
             "oppose", "conflict", "attack", "criticize", "dispute", "block", "mute",
-            "反对", "冲突", "攻击", "批评", "屏蔽",
+            "反对", "冲突", "攻击", "批评", "屏蔽",  # Chinese: oppose, conflict, attack, criticize, block
         ]
 
         if any(k in text for k in strong_pos):
@@ -550,10 +550,10 @@ class TopologyAwareRuntime:
 
     def _load_graph_prior(self):
         """
-        读取 prepare 阶段保存的图谱快照，编译 entity->agent 的关系先验。
-        产物：
-        - graph_prior_directed: 有向关系及强度（用于初始follow）
-        - graph_prior_pairs / graph_pair_strength: 无向关系（用于相似图先验）
+        Load graph snapshot saved during prepare phase and compile entity->agent relation priors.
+        Products:
+        - graph_prior_directed: directed relations with strength (for initial follows)
+        - graph_prior_pairs / graph_pair_strength: undirected relations (for similarity graph priors)
         """
         graph_file = self.config.get("entity_graph_file", "entity_graph_snapshot.json")
         path = os.path.join(self.simulation_dir, graph_file)
@@ -564,7 +564,7 @@ class TopologyAwareRuntime:
             with open(path, "r", encoding="utf-8") as f:
                 payload = json.load(f)
         except Exception as e:
-            self.log(f"读取图谱快照失败: {e}")
+            self.log(f"Failed to read graph snapshot: {e}")
             return
 
         edges = payload.get("edges", []) if isinstance(payload, dict) else []
@@ -608,7 +608,7 @@ class TopologyAwareRuntime:
 
         if mapped > 0:
             self.log(
-                f"已加载图谱关系先验: directed={len(self.graph_prior_directed)}, "
+                f"Graph relation priors loaded: directed={len(self.graph_prior_directed)}, "
                 f"undirected={len(self.graph_prior_pairs)}"
             )
 
@@ -622,7 +622,7 @@ class TopologyAwareRuntime:
             with open(path, "r", encoding="utf-8") as f:
                 payload = json.load(f)
         except Exception as e:
-            self.log(f"读取显式社交关系图失败: {e}")
+            self.log(f"Failed to read explicit social relation graph: {e}")
             return
 
         edges = payload.get("edges", []) if isinstance(payload, dict) else []
@@ -694,7 +694,7 @@ class TopologyAwareRuntime:
 
         if mapped > 0:
             self.log(
-                f"已加载显式社交关系图: directed={len(self.social_relation_directed)}, "
+                f"Explicit social relation graph loaded: directed={len(self.social_relation_directed)}, "
                 f"undirected={len(self.social_relation_pair_metrics)}"
             )
 
@@ -765,11 +765,11 @@ class TopologyAwareRuntime:
             sentiment_bias = _safe_float(cfg.get("sentiment_bias", 0.0), 0.0)
             stance = str(cfg.get("stance", "neutral")).lower()
 
-            # struc2vec_cluster 里的 opinion/stubbornness 对应变量
+            # opinion/stubbornness variables corresponding to struc2vec_cluster
             opinion = max(-1.0, min(1.0, sentiment_bias))
             stubbornness = cfg.get("stubbornness")
             if stubbornness is None:
-                # 默认将低活跃度视为更“固执”（可被配置覆盖）
+                # Default: lower activity = higher stubbornness (overridable via config)
                 stubbornness = 1.0 - max(0.0, min(1.0, activity_level))
             stubbornness = max(0.0, min(1.0, _safe_float(stubbornness, 0.5)))
             self.opinion_by_agent[agent_id] = opinion
@@ -1006,7 +1006,7 @@ class TopologyAwareRuntime:
         return 0.5 * ((sum(best_a) / len(best_a)) + (sum(best_b) / len(best_b)))
 
     def _build_similarity_graph(self):
-        """参考 struc2vec_cluster: 基于向量距离选取 top-k 候选对。"""
+        """Build similarity graph by selecting top-k candidate pairs based on vector distance (cf. struc2vec_cluster)."""
         agent_ids = sorted(self.structure_vec.keys())
         self.synthetic_adj = {aid: [] for aid in agent_ids}
         self.top_pair_records = []
@@ -1022,18 +1022,18 @@ class TopologyAwareRuntime:
             vec_i = self.structure_vec.get(aid, [])
             for bid in agent_ids[idx + 1:]:
                 vec_j = self.structure_vec.get(bid, [])
-                # 与参考实现一致：使用欧氏距离排名
+                # Consistent with reference impl: rank by Euclidean distance
                 dist = math.sqrt(sum((a - b) ** 2 for a, b in zip(vec_i, vec_j)))
                 semantic_sim = self._semantic_similarity(aid, bid)
                 if semantic_sim > 0:
-                    # 语义越相近，距离越小（提升进入 top-k 的概率）
+                    # Higher semantic similarity -> smaller distance (boosts top-k entry probability)
                     dist *= (1.0 - 0.3 * semantic_sim)
                 overlap_count, overlap_jaccard = self._keyword_overlap(aid, bid)
                 if overlap_count > 0:
-                    # 关键词重叠单独加权，确保关键词对候选对排序有实质影响
+                    # Keyword overlap weighted separately to ensure meaningful impact on pair ranking
                     dist *= (1.0 - min(0.35, 0.2 + 0.15 * overlap_jaccard))
 
-                # 图谱关系先验：若实体关系在语义图中已存在，则提升入图概率
+                # Graph relation prior: boost entry probability if entity relation exists in semantic graph
                 pair = (min(aid, bid), max(aid, bid))
                 prior_strength = self.graph_pair_strength.get(pair, 0.0)
                 if prior_strength > 0.0:
@@ -1060,7 +1060,7 @@ class TopologyAwareRuntime:
                 if _cosine_similarity(vec_i, vec_j) >= self.similarity_threshold:
                     records.append(pair)
 
-        # 避免阈值过高导致无候选对
+        # Fallback to avoid empty candidate set when threshold is too high
         if not records:
             records = backup_records
 
@@ -1068,7 +1068,7 @@ class TopologyAwareRuntime:
         top_k = max(1, int(math.ceil(len(records) * self.top_pairs_ratio)))
         selected = list(records[:top_k])
 
-        # 图谱先验补边：在 top-k 基础上追加少量图谱关系边，避免被纯向量相似完全淹没
+        # Graph prior edge supplement: append a few graph relation edges on top of top-k to avoid pure vector similarity dominance
         if self.graph_prior_pairs and self.graph_prior_extra_ratio > 0.0:
             extra_k = max(1, int(math.ceil(top_k * self.graph_prior_extra_ratio)))
             existing = {(min(a, b), max(a, b)) for a, b, _ in selected}
@@ -1092,7 +1092,7 @@ class TopologyAwareRuntime:
             self.synthetic_adj[b].append(a)
 
     def _approximate_ppr_single_source(self, source: int) -> Dict[int, float]:
-        """参考 struc2vec_cluster/test/cluster.py 的 push-based 近似PPR。"""
+        """Push-based approximate PPR (cf. struc2vec_cluster/test/cluster.py)."""
         p = defaultdict(float)
         r = defaultdict(float)
         r[source] = 1.0
@@ -1127,7 +1127,7 @@ class TopologyAwareRuntime:
         return dict(p)
 
     def _build_neighbor_influence_with_ppr(self):
-        """参考 struc2vec_cluster: 用PPR权重聚合邻居观点。"""
+        """Aggregate neighbor opinions using PPR weights (cf. struc2vec_cluster)."""
         agent_ids = sorted(self.structure_vec.keys())
         self.neighbor_influence = {}
         self.ppr_scores = {}
@@ -1220,7 +1220,7 @@ class TopologyAwareRuntime:
             self.unit_repr_by_id = {idx: aid for idx, aid in enumerate(agent_ids)}
             return
 
-        # 参考 struc2vec_cluster 的“top-k候选对 + 相似性扩团”流程
+        # Top-k candidate pairs + similarity expansion flow (cf. struc2vec_cluster)
         records = list(self.top_pair_records)
         top_pairs = self.top_pairs
         units: List[List[int]] = []
@@ -1256,7 +1256,7 @@ class TopologyAwareRuntime:
                 units.append(group_sorted)
                 visited.update(group_sorted)
 
-        # 未分到组的节点补成单节点组（与参考实现一致）
+        # Unassigned nodes become single-node units (consistent with reference impl)
         for aid in agent_ids:
             if aid not in visited:
                 units.append([aid])
@@ -1285,7 +1285,7 @@ class TopologyAwareRuntime:
         prob = min(1.0, max(0.0, base_activity))
         if self.enabled and self.differentiation_enabled:
             importance = self.importance_scaled.get(agent_id, 1.0)
-            # importance>1 的节点更容易触发更新，importance<1 的节点更新频率下降
+            # Nodes with importance>1 update more frequently; importance<1 reduces update frequency
             importance_boost = importance ** self.importance_alpha
             prob *= (0.65 + 0.35 * importance_boost)
         return min(0.98, max(0.01, prob))
@@ -1331,7 +1331,7 @@ class TopologyAwareRuntime:
             ]
             return self._weighted_sample_without_replacement(candidate_ids, weights, target_count)
 
-        # Coordination：按单元采样，仅让代表节点触发 LLM 推理，必要时让少量成员补充
+        # Coordination: sample by unit, only representative nodes trigger LLM inference, a few members supplement if needed
         unit_candidates: Dict[int, List[int]] = {}
         for aid in candidate_ids:
             unit_id = self.unit_id_by_agent.get(aid)
@@ -1405,9 +1405,9 @@ class TopologyAwareRuntime:
         max_total: Optional[int] = None,
     ) -> List[Tuple[int, int, float, str]]:
         """
-        编译初始 follow 建议边（有向）：
-        1) 优先使用语义图谱中的有向关系
-        2) 用 synthetic_adj + 重要性做补充弱曝光边
+        Compile initial follow suggestion edges (directed):
+        1) Prioritize directed relations from semantic graph
+        2) Supplement with weak exposure edges via synthetic_adj + importance
         """
         per_agent_limit = self.initial_follow_max_per_agent if max_per_agent is None else max(1, int(max_per_agent))
         total_limit = self.initial_follow_max_total if max_total is None else max(0, int(max_total))
@@ -1462,7 +1462,7 @@ class TopologyAwareRuntime:
 
         selected: List[Tuple[int, int, float, str]] = []
         for src, candidates in by_src.items():
-            # 去重并保留更高分
+            # Deduplicate and keep highest score
             best_by_dst: Dict[int, Tuple[float, str]] = {}
             for dst, score, reason in candidates:
                 prev = best_by_dst.get(dst)
@@ -1564,14 +1564,14 @@ class TopologyAwareRuntime:
                 if keep >= self.dynamic_neighbors_per_agent:
                     break
 
-        # 交互边会改变局部传播和聚类，刷新 PPR / unit / importance
+        # Interaction edges alter local propagation and clustering; refresh PPR / units / importance
         self._build_neighbor_influence_with_ppr()
         self._build_coordination_units()
         self._build_importance_scores()
         self._dynamic_events_since_refresh = 0
 
         if added > 0:
-            self.log(f"Topology-aware 动态更新: 新增交互边={added}, units={len(self.units)}")
+            self.log(f"Topology-aware dynamic update: new interaction edges={added}, units={len(self.units)}")
 
     def ingest_round_actions(self, round_num: int, actions: List[Dict[str, Any]]):
         if not self.enabled:
@@ -1610,11 +1610,11 @@ class TopologyAwareRuntime:
                 new_val = max(-2.0, min(4.0, old + weight))
                 self.dynamic_interaction_neighbors.setdefault(src, {})[dst] = new_val
 
-                # follow 是有向关系，记录下来避免重复注入
+                # Follow is a directed relation; record to avoid duplicate injection
                 if str(action_type).upper() == "FOLLOW":
                     self.known_follow_pairs.add((src, dst))
 
-                # 正向互动提供弱双向关联，帮助邻域检索和聚类收敛
+                # Positive interactions provide weak bidirectional association, aiding neighborhood retrieval and cluster convergence
                 if weight > 0:
                     old_back = self.dynamic_interaction_neighbors.get(dst, {}).get(src, 0.0)
                     back_val = max(-2.0, min(4.0, old_back + weight * 0.25))
@@ -1634,9 +1634,9 @@ class TopologyAwareRuntime:
 
 class SimpleMemRuntime:
     """
-    SimpleMem 风格的轻量增量记忆：
-    1) 每轮 ingest 动作并进行在线语义合并（incremental synthesis）
-    2) 每轮为活跃 agent 检索相关记忆并注入上下文（intent-aware retrieval）
+    SimpleMem-style lightweight incremental memory:
+    1) Each round ingests actions and performs online semantic merging (incremental synthesis)
+    2) Each round retrieves relevant memory for active agents and injects into context (intent-aware retrieval)
     """
 
     MEM_MARKER = "\n\n[SimpleMem Retrieved]\n"
@@ -1714,7 +1714,7 @@ class SimpleMemRuntime:
         if self.enabled:
             self._load()
             self.log(
-                f"SimpleMem已启用: platform={platform}, agents={len(self.per_agent_units)}, "
+                f"SimpleMem enabled: platform={platform}, agents={len(self.per_agent_units)}, "
                 f"retrieval_topk={self.retrieval_topk}, max_units_per_agent={self.max_units_per_agent}"
             )
 
@@ -1737,7 +1737,7 @@ class SimpleMemRuntime:
             if isinstance(raw_world, list):
                 self.world_units = [self._normalize_loaded_unit(unit, None) for unit in raw_world]
         except Exception as e:
-            self.log(f"加载SimpleMem失败，使用空记忆: {e}")
+            self.log(f"Failed to load SimpleMem, using empty memory: {e}")
             self.per_agent_units = {}
             self.world_units = []
             self._seq = 0
@@ -1754,7 +1754,7 @@ class SimpleMemRuntime:
             with open(self.memory_file, "w", encoding="utf-8") as f:
                 json.dump(payload, f, ensure_ascii=False, indent=2)
         except Exception as e:
-            self.log(f"保存SimpleMem失败: {e}")
+            self.log(f"Failed to save SimpleMem: {e}")
 
     def _append_jsonl(self, path: str, payload: Dict[str, Any]):
         with open(path, "a", encoding="utf-8") as f:
@@ -2586,7 +2586,7 @@ class SimpleMemRuntime:
                 if t:
                     intent.add(str(t).strip().lower())
 
-        # 引入该agent最近记忆关键词作为近期意图
+        # Include this agent's recent memory keywords as recent intent
         recent = self.per_agent_units.get(agent_id, [])
         if recent:
             for k in (recent[-1].get("keywords", []) or []):
@@ -2749,7 +2749,7 @@ class SimpleMemRuntime:
             except Exception:
                 continue
 
-        # 兜底：挂在自定义字段
+        # Fallback: attach to custom field
         try:
             setattr(agent, "memory_context", memory_context[:self.max_injected_chars])
         except Exception:

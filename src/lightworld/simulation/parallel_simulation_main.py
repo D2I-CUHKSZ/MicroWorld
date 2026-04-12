@@ -59,13 +59,9 @@ from dotenv import load_dotenv
 _env_file = os.path.join(_project_root, '.env')
 if os.path.exists(_env_file):
     load_dotenv(_env_file)
-    print(f"已加载环境配置: {_env_file}")
+    print(f"Loaded env config: {_env_file}")
 else:
-
-    _backend_env = os.path.join(_backend_dir, '.env')
-    if os.path.exists(_backend_env):
-        load_dotenv(_backend_env)
-        print(f"已加载环境配置: {_backend_env}")
+    load_dotenv(override=True)
 
 
 class MaxTokensWarningFilter(logging.Filter):
@@ -119,8 +115,8 @@ try:
         ManualAction,
     )
 except ImportError as e:
-    print(f"错误: 缺少依赖 {e}")
-    print("请先安装: pip install oasis-ai camel-ai")
+    print(f"Error: missing dependency {e}")
+    print("Please install first: pip install oasis-ai camel-ai")
     sys.exit(1)
 
 from lightworld.simulation.platform_runner import (
@@ -303,7 +299,7 @@ class ParallelIPCHandler:
         env, agent_graph, actual_platform = self._get_env_and_graph(platform)
 
         if not env or not agent_graph:
-            return {"platform": platform, "error": f"{platform}平台不可用"}
+            return {"platform": platform, "error": f"{platform} platform unavailable"}
 
         try:
             agent = agent_graph.get_agent(agent_id)
@@ -328,16 +324,16 @@ class ParallelIPCHandler:
 
             if "error" in result:
                 self.send_response(command_id, "failed", error=result["error"])
-                print(f"  Interview失败: agent_id={agent_id}, platform={platform}, error={result['error']}")
+                print(f"  Interview failed: agent_id={agent_id}, platform={platform}, error={result['error']}")
                 return False
             else:
                 self.send_response(command_id, "completed", result=result)
-                print(f"  Interview完成: agent_id={agent_id}, platform={platform}")
+                print(f"  Interview completed: agent_id={agent_id}, platform={platform}")
                 return True
 
 
         if not self.twitter_env and not self.reddit_env:
-            self.send_response(command_id, "failed", error="没有可用的模拟环境")
+            self.send_response(command_id, "failed", error="No available simulation environment")
             return False
 
         results = {
@@ -369,12 +365,12 @@ class ParallelIPCHandler:
 
         if success_count > 0:
             self.send_response(command_id, "completed", result=results)
-            print(f"  Interview完成: agent_id={agent_id}, 成功平台数={success_count}/{len(platforms_to_interview)}")
+            print(f"  Interview completed: agent_id={agent_id}, successful platforms={success_count}/{len(platforms_to_interview)}")
             return True
         else:
-            errors = [f"{p}: {r.get('error', '未知错误')}" for p, r in results["platforms"].items()]
+            errors = [f"{p}: {r.get('error', 'unknown error')}" for p, r in results["platforms"].items()]
             self.send_response(command_id, "failed", error="; ".join(errors))
-            print(f"  Interview失败: agent_id={agent_id}, 所有平台都失败")
+            print(f"  Interview failed: agent_id={agent_id}, all platforms failed")
             return False
 
     async def handle_batch_interview(self, command_id: str, interviews: List[Dict], platform: str = None) -> bool:
@@ -416,7 +412,7 @@ class ParallelIPCHandler:
                             action_args={"prompt": prompt}
                         )
                     except Exception as e:
-                        print(f"  警告: 无法获取Twitter Agent {agent_id}: {e}")
+                        print(f"  Warning: cannot get Twitter Agent {agent_id}: {e}")
 
                 if twitter_actions:
                     await self.twitter_env.step(twitter_actions)
@@ -427,7 +423,7 @@ class ParallelIPCHandler:
                         result["platform"] = "twitter"
                         results[f"twitter_{agent_id}"] = result
             except Exception as e:
-                print(f"  Twitter批量Interview失败: {e}")
+                print(f"  Twitter batch interview failed: {e}")
 
 
         if reddit_interviews and self.reddit_env:
@@ -443,7 +439,7 @@ class ParallelIPCHandler:
                             action_args={"prompt": prompt}
                         )
                     except Exception as e:
-                        print(f"  警告: 无法获取Reddit Agent {agent_id}: {e}")
+                        print(f"  Warning: cannot get Reddit Agent {agent_id}: {e}")
 
                 if reddit_actions:
                     await self.reddit_env.step(reddit_actions)
@@ -454,17 +450,17 @@ class ParallelIPCHandler:
                         result["platform"] = "reddit"
                         results[f"reddit_{agent_id}"] = result
             except Exception as e:
-                print(f"  Reddit批量Interview失败: {e}")
+                print(f"  Reddit batch interview failed: {e}")
 
         if results:
             self.send_response(command_id, "completed", result={
                 "interviews_count": len(results),
                 "results": results
             })
-            print(f"  批量Interview完成: {len(results)} 个Agent")
+            print(f"  Batch interview completed: {len(results)} agents")
             return True
         else:
-            self.send_response(command_id, "failed", error="没有成功的采访")
+            self.send_response(command_id, "failed", error="No successful interviews")
             return False
 
     def _get_interview_result(self, agent_id: int, platform: str) -> Dict[str, Any]:
@@ -505,7 +501,7 @@ class ParallelIPCHandler:
             conn.close()
 
         except Exception as e:
-            print(f"  读取Interview结果失败: {e}")
+            print(f"  Failed to read interview result: {e}")
 
         return result
 
@@ -518,7 +514,7 @@ class ParallelIPCHandler:
         command_type = command.get("command_type")
         args = command.get("args", {})
 
-        print(f"\n收到IPC命令: {command_type}, id={command_id}")
+        print(f"\nReceived IPC command: {command_type}, id={command_id}")
 
         if command_type == CommandType.INTERVIEW:
             await self.handle_interview(
@@ -538,12 +534,12 @@ class ParallelIPCHandler:
             return True
 
         elif command_type == CommandType.CLOSE_ENV:
-            print("收到关闭环境命令")
-            self.send_response(command_id, "completed", result={"message": "环境即将关闭"})
+            print("Received close environment command")
+            self.send_response(command_id, "completed", result={"message": "Environment shutting down"})
             return False
 
         else:
-            self.send_response(command_id, "failed", error=f"未知命令类型: {command_type}")
+            self.send_response(command_id, "failed", error=f"Unknown command type: {command_type}")
             return True
 
 
@@ -692,7 +688,7 @@ def fetch_new_actions_from_db(
 
         conn.close()
     except Exception as e:
-        print(f"读取数据库动作失败: {e}")
+        print(f"Failed to read database actions: {e}")
 
     return actions, new_last_rowid
 
@@ -822,7 +818,7 @@ def _enrich_action_context(
 
     except Exception as e:
 
-        print(f"补充动作上下文失败: {e}")
+        print(f"Failed to enrich action context: {e}")
 
 
 def _get_post_info(
@@ -989,7 +985,7 @@ def create_model(config: Dict[str, Any], use_boost: bool = False):
         llm_api_key = boost_api_key
         llm_base_url = boost_base_url
         llm_model = boost_model or os.environ.get("LLM_MODEL_NAME", "")
-        config_label = "[加速LLM]"
+        config_label = "[Boost LLM]"
     else:
 
         llm_api_key = os.environ.get("LLM_API_KEY", "")
@@ -999,7 +995,7 @@ def create_model(config: Dict[str, Any], use_boost: bool = False):
             llm_api_key = llm_api_key or getattr(AppConfig, "LLM_API_KEY", "")
             llm_base_url = llm_base_url or getattr(AppConfig, "LLM_BASE_URL", "")
             llm_model = llm_model or getattr(AppConfig, "LLM_MODEL_NAME", "")
-        config_label = "[通用LLM]"
+        config_label = "[General LLM]"
 
 
     if not llm_model:
@@ -1010,7 +1006,7 @@ def create_model(config: Dict[str, Any], use_boost: bool = False):
         os.environ["OPENAI_API_KEY"] = llm_api_key
 
     if not os.environ.get("OPENAI_API_KEY"):
-        raise ValueError("缺少 API Key 配置，请在项目根目录 .env 文件中设置 LLM_API_KEY")
+        raise ValueError("Missing API Key config. Set LLM_API_KEY in the .env file at project root")
 
     if llm_base_url:
         os.environ["OPENAI_API_BASE_URL"] = llm_base_url
@@ -1018,7 +1014,7 @@ def create_model(config: Dict[str, Any], use_boost: bool = False):
 
     token_counter = OfflineApproxTokenCounter()
 
-    print(f"{config_label} model={llm_model}, base_url={llm_base_url[:40] if llm_base_url else '默认'}...")
+    print(f"{config_label} model={llm_model}, base_url={llm_base_url[:40] if llm_base_url else 'default'}...")
 
     return ModelFactory.create(
         model_platform=ModelPlatformType.OPENAI,
@@ -1028,50 +1024,50 @@ def create_model(config: Dict[str, Any], use_boost: bool = False):
 
 
 async def main():
-    parser = argparse.ArgumentParser(description='OASIS双平台并行模拟')
+    parser = argparse.ArgumentParser(description='OASIS dual-platform parallel simulation')
     parser.add_argument(
         '--config',
         type=str,
         required=True,
-        help='配置文件路径 (simulation_config.json)'
+        help='Config file path (simulation_config.json)'
     )
     parser.add_argument(
         '--twitter-only',
         action='store_true',
-        help='只运行Twitter模拟'
+        help='Run Twitter simulation only'
     )
     parser.add_argument(
         '--reddit-only',
         action='store_true',
-        help='只运行Reddit模拟'
+        help='Run Reddit simulation only'
     )
     parser.add_argument(
         '--max-rounds',
         type=int,
         default=None,
-        help='最大模拟轮数（可选，用于截断过长的模拟）'
+        help='Max simulation rounds (optional, truncate long simulations)'
     )
     parser.add_argument(
         '--no-wait',
         action='store_true',
         default=False,
-        help='模拟完成后立即关闭环境，不进入等待命令模式'
+        help='Close environment immediately after simulation, skip command-wait mode'
     )
     parser.add_argument(
         '--light-mode',
         action='store_true',
-        help='启用轻量模拟模式（降低每轮激活规模，并默认启用topology-aware）'
+        help='Enable light simulation mode (reduce per-round activation scale, enables topology-aware by default)'
     )
     parser.add_argument(
         '--topology-aware',
         action='store_true',
-        help='强制启用 topology-aware 更新策略（coordination+differentiation）'
+        help='Force enable topology-aware update strategy (coordination+differentiation)'
     )
     parser.add_argument(
         '--cluster-method',
         choices=[CLUSTER_METHOD_THRESHOLD, CLUSTER_METHOD_LLM_KEYWORD],
         default=None,
-        help='覆盖本次运行的 cluster 方法；未指定时，交互终端会提示选择。',
+        help='Override cluster method for this run; if unset, interactive terminal will prompt.',
     )
 
     args = parser.parse_args()
@@ -1081,7 +1077,7 @@ async def main():
     _shutdown_event = asyncio.Event()
 
     if not os.path.exists(args.config):
-        print(f"错误: 配置文件不存在: {args.config}")
+        print(f"Error: config file not found: {args.config}")
         sys.exit(1)
 
     config = load_config(args.config)
@@ -1092,7 +1088,7 @@ async def main():
     if selected_cluster_method:
         apply_cluster_method_to_simulation_config(config, selected_cluster_method)
         _write_json_file(args.config, config)
-        print(f"[Config] cluster 方法: {describe_cluster_method(selected_cluster_method)}")
+        print(f"[Config] cluster method: {describe_cluster_method(selected_cluster_method)}")
     simulation_dir = os.path.dirname(args.config) or "."
     wait_for_commands = not args.no_wait
     status_handler = ParallelIPCHandler(simulation_dir=simulation_dir)
@@ -1169,18 +1165,18 @@ async def main():
     reddit_logger = log_manager.get_reddit_logger()
 
     log_manager.info("=" * 60)
-    log_manager.info("OASIS 双平台并行模拟")
-    log_manager.info(f"配置文件: {args.config}")
-    log_manager.info(f"模拟ID: {config.get('simulation_id', 'unknown')}")
-    log_manager.info(f"等待命令模式: {'启用' if wait_for_commands else '禁用'}")
-    log_manager.info(f"light模式: {'启用' if (config.get('light_mode', {}) or {}).get('enabled', False) else '禁用'}")
-    log_manager.info(f"topology-aware: {'启用' if (config.get('topology_aware', {}) or {}).get('enabled', False) else '禁用'}")
+    log_manager.info("OASIS dual-platform parallel simulation")
+    log_manager.info(f"Config file: {args.config}")
+    log_manager.info(f"Simulation ID: {config.get('simulation_id', 'unknown')}")
+    log_manager.info(f"Command-wait mode: {'enabled' if wait_for_commands else 'disabled'}")
+    log_manager.info(f"Light mode: {'enabled' if (config.get('light_mode', {}) or {}).get('enabled', False) else 'disabled'}")
+    log_manager.info(f"Topology-aware: {'enabled' if (config.get('topology_aware', {}) or {}).get('enabled', False) else 'disabled'}")
     log_manager.info(
         "cluster features: threshold=%s, llm_keyword=%s",
         bool(topo_cfg.get("threshold_cluster_enabled", False)),
         bool(topo_cfg.get("llm_keyword_cluster_enabled", False)),
     )
-    log_manager.info(f"simplemem: {'启用' if (config.get('simplemem', {}) or {}).get('enabled', True) else '禁用'}")
+    log_manager.info(f"Simplemem: {'enabled' if (config.get('simplemem', {}) or {}).get('enabled', True) else 'disabled'}")
     log_manager.info("=" * 60)
 
     time_config = config.get("time_config", {})
@@ -1188,20 +1184,20 @@ async def main():
     minutes_per_round = time_config.get('minutes_per_round', 30)
     config_total_rounds = (total_hours * 60) // minutes_per_round
 
-    log_manager.info(f"模拟参数:")
-    log_manager.info(f"  - 总模拟时长: {total_hours}小时")
-    log_manager.info(f"  - 每轮时间: {minutes_per_round}分钟")
-    log_manager.info(f"  - 配置总轮数: {config_total_rounds}")
+    log_manager.info(f"Simulation parameters:")
+    log_manager.info(f"  - Total simulation time: {total_hours} hours")
+    log_manager.info(f"  - Time per round: {minutes_per_round} min")
+    log_manager.info(f"  - Configured total rounds: {config_total_rounds}")
     if args.max_rounds:
-        log_manager.info(f"  - 最大轮数限制: {args.max_rounds}")
+        log_manager.info(f"  - Max rounds limit: {args.max_rounds}")
         if args.max_rounds < config_total_rounds:
-            log_manager.info(f"  - 实际执行轮数: {args.max_rounds} (已截断)")
-    log_manager.info(f"  - Agent数量: {len(config.get('agent_configs', []))}")
+            log_manager.info(f"  - Actual rounds: {args.max_rounds} (truncated)")
+    log_manager.info(f"  - Agent count: {len(config.get('agent_configs', []))}")
 
-    log_manager.info("日志结构:")
-    log_manager.info(f"  - 主日志: simulation.log")
-    log_manager.info(f"  - Twitter动作: twitter/actions.jsonl")
-    log_manager.info(f"  - Reddit动作: reddit/actions.jsonl")
+    log_manager.info("Log structure:")
+    log_manager.info(f"  - Main log: simulation.log")
+    log_manager.info(f"  - Twitter actions: twitter/actions.jsonl")
+    log_manager.info(f"  - Reddit actions: reddit/actions.jsonl")
     log_manager.info("=" * 60)
 
     start_time = datetime.now()
@@ -1286,7 +1282,7 @@ async def main():
 
     total_elapsed = (datetime.now() - start_time).total_seconds()
     log_manager.info("=" * 60)
-    log_manager.info(f"模拟循环完成! 总耗时: {total_elapsed:.1f}秒")
+    log_manager.info(f"Simulation loop completed! Total time: {total_elapsed:.1f}s")
 
     status_handler.twitter_env = twitter_result.env if twitter_result else None
     status_handler.twitter_agent_graph = twitter_result.agent_graph if twitter_result else None
@@ -1298,8 +1294,8 @@ async def main():
     if wait_for_commands:
         log_manager.info("")
         log_manager.info("=" * 60)
-        log_manager.info("进入等待命令模式 - 环境保持运行")
-        log_manager.info("支持的命令: interview, batch_interview, close_env")
+        log_manager.info("Entering command-wait mode - environment stays running")
+        log_manager.info("Supported commands: interview, batch_interview, close_env")
         log_manager.info("=" * 60)
 
 
@@ -1319,29 +1315,29 @@ async def main():
                 except asyncio.TimeoutError:
                     pass
         except KeyboardInterrupt:
-            print("\n收到中断信号")
+            print("\nReceived interrupt signal")
         except asyncio.CancelledError:
-            print("\n任务被取消")
+            print("\nTask cancelled")
         except Exception as e:
-            print(f"\n命令处理出错: {e}")
+            print(f"\nCommand processing error: {e}")
 
-        log_manager.info("\n关闭环境...")
+        log_manager.info("\nShutting down environment...")
         ipc_handler.update_status("stopped")
 
 
     if twitter_result and twitter_result.env:
         await twitter_result.env.close()
-        log_manager.info("[Twitter] 环境已关闭")
+        log_manager.info("[Twitter] Environment closed")
 
     if reddit_result and reddit_result.env:
         await reddit_result.env.close()
-        log_manager.info("[Reddit] 环境已关闭")
+        log_manager.info("[Reddit] Environment closed")
 
     status_handler.update_status("stopped")
 
     log_manager.info("=" * 60)
-    log_manager.info(f"全部完成!")
-    log_manager.info(f"日志文件:")
+    log_manager.info(f"All done!")
+    log_manager.info(f"Log files:")
     log_manager.info(f"  - {os.path.join(simulation_dir, 'simulation.log')}")
     log_manager.info(f"  - {os.path.join(simulation_dir, 'twitter', 'actions.jsonl')}")
     log_manager.info(f"  - {os.path.join(simulation_dir, 'reddit', 'actions.jsonl')}")
@@ -1352,7 +1348,7 @@ def setup_signal_handlers(loop=None):
     def signal_handler(signum, frame):
         global _cleanup_done
         sig_name = "SIGTERM" if signum == signal.SIGTERM else "SIGINT"
-        print(f"\n收到 {sig_name} 信号，正在退出...")
+        print(f"\nReceived {sig_name} signal, exiting...")
 
         if not _cleanup_done:
             _cleanup_done = True
@@ -1362,7 +1358,7 @@ def setup_signal_handlers(loop=None):
 
 
         else:
-            print("强制退出...")
+            print("Force quitting...")
             sys.exit(1)
 
     signal.signal(signal.SIGTERM, signal_handler)
@@ -1374,7 +1370,7 @@ if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        print("\n程序被中断")
+        print("\nProgram interrupted")
     except SystemExit:
         pass
     finally:
@@ -1384,4 +1380,4 @@ if __name__ == "__main__":
             resource_tracker._resource_tracker._stop()
         except Exception:
             pass
-        print("模拟进程已退出")
+        print("Simulation process exited")

@@ -31,9 +31,9 @@ def _safe_int(value: Any, default: int = 0) -> int:
 class SocialRelationGraphCompiler:
     """Compile explicit social relation weights from graph snapshot edges."""
 
-    _FOLLOW_KEYWORDS = ("follow", "关注", "subscriber", "follower")
-    _AMPLIFY_KEYWORDS = ("repost", "retweet", "quote", "转发", "引用", "share", "amplif")
-    _TRUST_KEYWORDS = ("trust", "endorse", "support", "approve", "信任", "支持", "背书")
+    _FOLLOW_KEYWORDS = ("follow", "subscriber", "follower")
+    _AMPLIFY_KEYWORDS = ("repost", "retweet", "quote", "share", "amplif")
+    _TRUST_KEYWORDS = ("trust", "endorse", "support", "approve")
     _ALLY_KEYWORDS = (
         "ally",
         "alliance",
@@ -42,9 +42,6 @@ class SocialRelationGraphCompiler:
         "collaborate",
         "partner",
         "friend",
-        "联盟",
-        "合作",
-        "伙伴",
     )
     _HOSTILE_KEYWORDS = (
         "oppose",
@@ -54,13 +51,8 @@ class SocialRelationGraphCompiler:
         "dispute",
         "block",
         "mute",
-        "反对",
-        "冲突",
-        "攻击",
-        "批评",
-        "屏蔽",
     )
-    _WEAK_EXPOSURE_KEYWORDS = ("mention", "report", "comment", "reply", "提及", "报道", "评论", "回应")
+    _WEAK_EXPOSURE_KEYWORDS = ("mention", "report", "comment", "reply")
 
     def _edge_metrics(self, edge_name: str, fact: str) -> Dict[str, float]:
         text = f"{edge_name} {fact}".lower()

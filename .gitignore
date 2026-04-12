@@ -1,7 +1,5 @@
 # Local secrets
 .env
-backend/.env
-backend/app/setting/settings_local.py
 src/lightworld/config/settings_local.py
 
 # Python caches
@@ -17,13 +15,9 @@ build/
 # Local logs
 log/
 logs/
-backend/log/
-backend/logs/
 
 # Generated runtime artifacts
-backend/uploads/
 output/
-backend/input2graph/projects/
 experiments/run_*/
 data/generated/*
 !data/generated/.gitkeep

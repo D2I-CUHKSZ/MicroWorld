@@ -23,7 +23,7 @@ class LLMClient:
         self.model = model or Config.LLM_MODEL_NAME
 
         if not self.api_key:
-            raise ValueError("LLM_API_KEY 未配置")
+            raise ValueError("LLM_API_KEY is not configured")
 
         self.client = OpenAI(
             api_key=self.api_key,
@@ -75,7 +75,7 @@ class LLMClient:
         try:
             return json.loads(cleaned_response)
         except json.JSONDecodeError:
-            raise ValueError(f"LLM返回的JSON格式无效: {cleaned_response}")
+            raise ValueError(f"Invalid JSON returned by LLM: {cleaned_response}")
 
     def transcribe_audio(
         self,
@@ -93,9 +93,9 @@ class LLMClient:
                 )
         except NotFoundError as exc:
             raise RuntimeError(
-                "当前音频转写服务返回 404。"
-                "通常表示所配置的 base_url 不支持 /audio/transcriptions 接口，"
-                f"或模型 `{model}` 在该服务中不存在。"
+                "Audio transcription service returned 404. "
+                "This usually means the configured base_url does not support the /audio/transcriptions endpoint, "
+                f"or the model `{model}` does not exist in this service."
             ) from exc
 
         text = getattr(response, "text", "")

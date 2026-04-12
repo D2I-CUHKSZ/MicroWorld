@@ -17,35 +17,35 @@ def make_entity(name: str, label: str, summary: str = "", attributes=None, relat
 def test_merge_alias_entities_merges_university_aliases():
     builder = SimulationPopulationBuilder()
     entities = [
-        make_entity("武汉大学", "University", "学校官方主体"),
-        make_entity("武大", "University", "武汉大学的简称"),
-        make_entity("新京报", "MediaOutlet", "媒体节点"),
+        make_entity("Example Media", "University", "Official institution primary listing"),
+        make_entity("ExampleMedia", "University", "Alternate compact spelling same org"),
+        make_entity("Plain Press", "MediaOutlet", "Media node"),
     ]
 
     merged, alias_map, groups = builder.merge_alias_entities(entities)
 
     names = [entity.name for entity in merged]
-    assert "武汉大学" in names
-    assert "武大" not in names
-    assert alias_map["uuid_武大"] == "uuid_武汉大学"
-    assert any(group["canonical_name"] == "武汉大学" for group in groups)
+    assert "Example Media" in names
+    assert "ExampleMedia" not in names
+    assert alias_map["uuid_ExampleMedia"] == "uuid_Example Media"
+    assert any(group["canonical_name"] == "Example Media" for group in groups)
 
 
 def test_add_ordinary_users_increases_non_elite_population():
     builder = SimulationPopulationBuilder()
     entities = [
-        make_entity(f"媒体{i}", "MediaOutlet", "媒体报道")
+        make_entity(f"press_outlet_{i}", "MediaOutlet", "Press coverage")
         for i in range(10)
     ] + [
-        make_entity(f"学校{i}", "University", "官方说明")
+        make_entity(f"university_{i}", "University", "Official notice")
         for i in range(4)
     ] + [
-        make_entity("当事学生", "Student", "学生视角")
+        make_entity("involved_student", "Student", "Student perspective")
     ]
 
     augmented, synthetic = builder.add_ordinary_users(
         entities,
-        simulation_requirement="围绕校园舆情、程序正义和事实核查进行模拟",
+        simulation_requirement="Simulate campus sentiment, procedural justice, and fact-checking",
         ordinary_ratio_target=0.5,
         max_synthetic_entities=12,
     )

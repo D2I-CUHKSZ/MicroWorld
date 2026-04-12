@@ -197,7 +197,6 @@ LightWorld/
     unit/
     integration/
   examples/                   # example run instructions with README
-  backend/                    # legacy backend (preserved for compatibility)
 ```
 
 ## Generated Artifacts

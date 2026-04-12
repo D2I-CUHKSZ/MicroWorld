@@ -173,7 +173,7 @@ class SimulationManager:
         )
 
         self._save_simulation_state(state)
-        logger.info(f"创建模拟: {simulation_id}, project={project_id}, graph={graph_id}")
+        logger.info(f"Created simulation: {simulation_id}, project={project_id}, graph={graph_id}")
 
         return state
 
@@ -189,7 +189,7 @@ class SimulationManager:
     ) -> SimulationState:
         state = self._load_simulation_state(simulation_id)
         if not state:
-            raise ValueError(f"模拟不存在: {simulation_id}")
+            raise ValueError(f"Simulation not found: {simulation_id}")
 
         try:
             state.status = SimulationStatus.PREPARING
@@ -199,13 +199,13 @@ class SimulationManager:
 
 
             if progress_callback:
-                progress_callback("reading", 0, "正在连接Zep图谱...")
+                progress_callback("reading", 0, "Connecting to Zep graph...")
 
             services = self._preparation_factory.create(graph_id=state.graph_id)
             reader = services.reader
 
             if progress_callback:
-                progress_callback("reading", 30, "正在读取节点数据...")
+                progress_callback("reading", 30, "Reading node data...")
 
             filtered = reader.filter_defined_entities(
                 graph_id=state.graph_id,
@@ -229,14 +229,14 @@ class SimulationManager:
             if progress_callback:
                 progress_callback(
                     "reading", 100,
-                    f"完成，共 {len(prepared_entities)} 个实体（含别名合并与普通用户补充）",
+                    f"Done, {len(prepared_entities)} entities total (including alias merges and ordinary user augmentation)",
                     current=len(prepared_entities),
                     total=len(prepared_entities)
                 )
 
             if len(prepared_entities) == 0:
                 state.status = SimulationStatus.FAILED
-                state.error = "没有找到符合条件的实体，请检查图谱是否正确构建"
+                state.error = "No matching entities found. Please check if the graph is properly built."
                 self._save_simulation_state(state)
                 return state
 
@@ -245,7 +245,7 @@ class SimulationManager:
                 with open(population_adjustments_file, "w", encoding="utf-8") as f:
                     json.dump(population_result.to_dict(), f, ensure_ascii=False, indent=2)
             except Exception as e:
-                logger.warning(f"保存 population adjustments 失败，继续后续流程: {e}")
+                logger.warning(f"Failed to save population adjustments, continuing: {e}")
 
 
             entity_graph_edge_count = 0
@@ -307,24 +307,24 @@ class SimulationManager:
                 with open(entity_graph_file, "w", encoding="utf-8") as f:
                     json.dump(graph_payload, f, ensure_ascii=False, indent=2)
                 logger.info(
-                    f"已保存图谱实体快照: {entity_graph_file}, "
+                    f"Saved entity graph snapshot: {entity_graph_file}, "
                     f"entities={len(prepared_entities)}, edges={entity_graph_edge_count}"
                 )
             except Exception as e:
-                logger.warning(f"保存图谱实体快照失败，继续后续流程: {e}")
+                logger.warning(f"Failed to save entity graph snapshot, continuing: {e}")
 
 
             entity_prompts: List[Dict[str, Any]] = []
             entity_prompts_file = os.path.join(sim_dir, "entity_prompts.json")
             try:
-                logger.info(f"开始提取实体语义prompts: count={len(prepared_entities)}")
+                logger.info(f"Starting entity semantic prompt extraction: count={len(prepared_entities)}")
                 entity_prompts = services.prompt_extractor.extract_prompts(
                     entities=prepared_entities,
                     simulation_requirement=simulation_requirement
                 )
                 services.prompt_extractor.save_prompts(entity_prompts, entity_prompts_file)
             except Exception as e:
-                logger.warning(f"提取实体语义prompts失败，继续后续流程: {e}")
+                logger.warning(f"Failed to extract entity semantic prompts, continuing: {e}")
 
 
             total_entities = len(prepared_entities)
@@ -332,7 +332,7 @@ class SimulationManager:
             if progress_callback:
                 progress_callback(
                     "generating_profiles", 0,
-                    "开始生成...",
+                    "Starting generation...",
                     current=0,
                     total=total_entities
                 )
@@ -377,7 +377,7 @@ class SimulationManager:
             if progress_callback:
                 progress_callback(
                     "generating_profiles", 95,
-                    "保存Profile文件...",
+                    "Saving profile files...",
                     current=total_entities,
                     total=total_entities
                 )
@@ -400,7 +400,7 @@ class SimulationManager:
             if progress_callback:
                 progress_callback(
                     "generating_profiles", 100,
-                    f"完成，共 {len(profiles)} 个Profile",
+                    f"Done, {len(profiles)} profiles total",
                     current=len(profiles),
                     total=len(profiles)
                 )
@@ -409,7 +409,7 @@ class SimulationManager:
             if progress_callback:
                 progress_callback(
                     "generating_config", 0,
-                    "正在分析模拟需求...",
+                    "Analyzing simulation requirements...",
                     current=0,
                     total=3
                 )
@@ -417,7 +417,7 @@ class SimulationManager:
             if progress_callback:
                 progress_callback(
                     "generating_config", 30,
-                    "正在调用LLM生成配置...",
+                    "Calling LLM to generate config...",
                     current=1,
                     total=3
                 )
@@ -446,17 +446,17 @@ class SimulationManager:
                 social_relation_edge_count = int(relation_graph.get("edge_count", 0))
                 services.relation_graph_compiler.save(relation_graph, social_relation_graph_file)
                 logger.info(
-                    f"已编译显式社交关系图: {social_relation_graph_file}, "
+                    f"Compiled explicit social relation graph: {social_relation_graph_file}, "
                     f"nodes={relation_graph.get('node_count', 0)}, "
                     f"edges={social_relation_edge_count}"
                 )
             except Exception as e:
-                logger.warning(f"编译显式社交关系图失败，继续后续流程: {e}")
+                logger.warning(f"Failed to compile explicit social relation graph, continuing: {e}")
 
             if progress_callback:
                 progress_callback(
                     "generating_config", 70,
-                    "正在保存配置文件...",
+                    "Saving config files...",
                     current=2,
                     total=3
                 )
@@ -485,7 +485,7 @@ class SimulationManager:
             if progress_callback:
                 progress_callback(
                     "generating_config", 100,
-                    "配置生成完成",
+                    "Config generation complete",
                     current=3,
                     total=3
                 )
@@ -494,13 +494,13 @@ class SimulationManager:
             state.status = SimulationStatus.READY
             self._save_simulation_state(state)
 
-            logger.info(f"模拟准备完成: {simulation_id}, "
+            logger.info(f"Simulation preparation complete: {simulation_id}, "
                        f"entities={state.entities_count}, profiles={state.profiles_count}")
 
             return state
 
         except Exception as e:
-            logger.error(f"模拟准备失败: {simulation_id}, error={str(e)}")
+            logger.error(f"Simulation preparation failed: {simulation_id}, error={str(e)}")
             import traceback
             logger.error(traceback.format_exc())
             state.status = SimulationStatus.FAILED
@@ -524,7 +524,7 @@ class SimulationManager:
     def get_profiles(self, simulation_id: str, platform: str = "reddit") -> List[Dict[str, Any]]:
         state = self._load_simulation_state(simulation_id)
         if not state:
-            raise ValueError(f"模拟不存在: {simulation_id}")
+            raise ValueError(f"Simulation not found: {simulation_id}")
 
         sim_dir = self._get_simulation_dir(simulation_id)
         profile_path = os.path.join(sim_dir, f"{platform}_profiles.json")
@@ -553,10 +553,10 @@ class SimulationManager:
                 "parallel": f"uv run lightworld-parallel-sim --config {config_path}",
             },
             "instructions": (
-                f"1. 进入 backend 目录并确保已执行 `uv sync`\n"
-                f"2. 运行模拟 (脚本位于 {scripts_dir}):\n"
-                f"   - 单独运行Twitter: uv run python {scripts_dir}/run_twitter_simulation.py --config {config_path}\n"
-                f"   - 单独运行Reddit: uv run python {scripts_dir}/run_reddit_simulation.py --config {config_path}\n"
-                f"   - 并行运行双平台: uv run lightworld-parallel-sim --config {config_path}"
+                f"1. Enter the backend directory and ensure `uv sync` has been run\n"
+                f"2. Run simulation (scripts located at {scripts_dir}):\n"
+                f"   - Run Twitter only: uv run python {scripts_dir}/run_twitter_simulation.py --config {config_path}\n"
+                f"   - Run Reddit only: uv run python {scripts_dir}/run_reddit_simulation.py --config {config_path}\n"
+                f"   - Run both platforms in parallel: uv run lightworld-parallel-sim --config {config_path}"
             )
         }

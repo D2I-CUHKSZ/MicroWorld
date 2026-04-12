@@ -9,15 +9,12 @@ import os
 from dotenv import load_dotenv
 
 
-# Prefer repository root .env, then backend/.env as compatibility fallback.
+# Load .env from repository root.
 _current_dir = os.path.dirname(os.path.abspath(__file__))
-_repo_root_env = os.path.abspath(os.path.join(_current_dir, "../../../../.env"))
-_backend_env = os.path.abspath(os.path.join(_current_dir, "../../../../backend/.env"))
+_repo_root_env = os.path.abspath(os.path.join(_current_dir, "../../..", ".env"))
 
 if os.path.exists(_repo_root_env):
     load_dotenv(_repo_root_env, override=True)
-elif os.path.exists(_backend_env):
-    load_dotenv(_backend_env, override=True)
 else:
     load_dotenv(override=True)
 
@@ -44,9 +41,9 @@ class Config:
     ZEP_API_KEY = os.environ.get("ZEP_API_KEY", "")
 
     # Files
-    MAX_CONTENT_LENGTH = 100 * 1024 * 1024  # 50MB
+    MAX_CONTENT_LENGTH = 100 * 1024 * 1024  # 100MB
     REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
-    INPUT2GRAPH_ROOT = os.path.join(REPO_ROOT, "backend", "input2graph")
+    INPUT2GRAPH_ROOT = os.path.join(REPO_ROOT, "data", "generated")
     OUTPUT_ROOT = os.path.join(REPO_ROOT, "output")
     UPLOAD_FOLDER = INPUT2GRAPH_ROOT
     DOCUMENT_EXTENSIONS = {"pdf", "md", "txt", "markdown"}
@@ -59,7 +56,7 @@ class Config:
     DEFAULT_CHUNK_OVERLAP = 50
 
     # Multimodal ingestion
-    # 多模态理解走 Qwen Omni，音频转写走 Qwen ASR
+    # Multimodal understanding uses Qwen Omni; audio transcription uses Qwen ASR.
     MULTIMODAL_VISION_MODEL_NAME = "qwen3-omni-flash"
     MULTIMODAL_AUDIO_MODEL_NAME = "qwen3-asr-flash"
     MULTIMODAL_AUDIO_API_KEY = os.environ.get("MULTIMODAL_AUDIO_API_KEY", "")
@@ -111,9 +108,9 @@ class Config:
         """Validate required env vars."""
         errors = []
         if not cls.LLM_API_KEY:
-            errors.append("LLM_API_KEY 未配置")
+            errors.append("LLM_API_KEY is not configured")
         if not cls.ZEP_API_KEY:
-            errors.append("ZEP_API_KEY 未配置")
+            errors.append("ZEP_API_KEY is not configured")
         return errors
 
 

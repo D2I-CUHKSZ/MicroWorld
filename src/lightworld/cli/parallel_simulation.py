@@ -16,7 +16,7 @@ def main() -> int:
     try:
         asyncio.run(_async_main())
     except KeyboardInterrupt:
-        print("\n程序被中断")
+        print("\nInterrupted by user")
     except SystemExit:
         pass
     finally:
@@ -26,7 +26,7 @@ def main() -> int:
             resource_tracker._resource_tracker._stop()
         except Exception:
             pass
-        print("模拟进程已退出")
+        print("Simulation process exited")
     return 0
 
 

@@ -82,9 +82,9 @@ class FileProjectRepository:
 
     def save_local_file(self, project_id: str, source_path: str) -> Dict[str, str]:
         if not os.path.exists(source_path):
-            raise FileNotFoundError(f"文件不存在: {source_path}")
+            raise FileNotFoundError(f"File not found: {source_path}")
         if not os.path.isfile(source_path):
-            raise ValueError(f"不是文件: {source_path}")
+            raise ValueError(f"Not a file: {source_path}")
 
         original_filename = os.path.basename(source_path)
         file_path = self._allocate_file_path(project_id, original_filename)

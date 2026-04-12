@@ -12,57 +12,57 @@ from lightworld.graph.local_graph_pipeline import LocalGraphPipeline, LocalPipel
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="LightWorld 本地多模态直读：文本/图片/视频 -> 证据块 -> 本体生成 -> 图谱构建"
+        description="LightWorld local multimodal ingest: text/image/video -> evidence chunks -> ontology -> graph"
     )
-    parser.add_argument("--config", default="", help="从 JSON 配置文件读取本地管线参数")
+    parser.add_argument("--config", default="", help="Load local pipeline options from a JSON config file")
     parser.add_argument(
         "--files",
         nargs="*",
         default=None,
-        help="本地输入路径列表，支持 pdf/md/txt/markdown/jpg/png/webp/mp4/mov/mkv/avi",
+        help="Local input paths; supports pdf/md/txt/markdown/jpg/png/webp/mp4/mov/mkv/avi",
     )
-    parser.add_argument("--files-from", default=None, help="从文本文件读取路径（每行一个文件路径）")
-    parser.add_argument("--simulation-requirement", default=None, help="模拟需求描述")
-    parser.add_argument("--project-name", default=None, help="项目名称")
-    parser.add_argument("--additional-context", default=None, help="额外上下文（传给本体生成）")
-    parser.add_argument("--graph-name", default=None, help="图谱名称（默认使用项目名）")
+    parser.add_argument("--files-from", default=None, help="Read paths from a text file (one path per line)")
+    parser.add_argument("--simulation-requirement", default=None, help="Simulation requirement description")
+    parser.add_argument("--project-name", default=None, help="Project name")
+    parser.add_argument("--additional-context", default=None, help="Extra context passed to ontology generation")
+    parser.add_argument("--graph-name", default=None, help="Graph name (defaults to project name)")
     parser.add_argument(
         "--chunk-size",
         type=int,
         default=None,
-        help=f"图谱分块大小，默认 {Config.DEFAULT_CHUNK_SIZE}",
+        help=f"Graph chunk size; default {Config.DEFAULT_CHUNK_SIZE}",
     )
     parser.add_argument(
         "--chunk-overlap",
         type=int,
         default=None,
-        help=f"图谱分块重叠，默认 {Config.DEFAULT_CHUNK_OVERLAP}",
+        help=f"Graph chunk overlap; default {Config.DEFAULT_CHUNK_OVERLAP}",
     )
-    parser.add_argument("--batch-size", type=int, default=None, help="发送到 Zep 的批次大小，默认 3")
+    parser.add_argument("--batch-size", type=int, default=None, help="Batch size sent to Zep; default 3")
 
     parser.add_argument(
         "--light-mode",
         action="store_true",
         default=None,
-        help="启用轻量模式：压缩构图文本并限制分块数量",
+        help="Enable light mode: compress graph text and cap chunk count",
     )
     parser.add_argument(
         "--light-text-max-chars",
         type=int,
         default=None,
-        help="light 模式下参与构图的最大文本长度，默认 120000",
+        help="Max text length for graph building in light mode; default 120000",
     )
     parser.add_argument(
         "--light-ontology-max-chars",
         type=int,
         default=None,
-        help="light 模式下每个文档参与本体生成的最大字符数，默认 80000",
+        help="Max chars per document for ontology in light mode; default 80000",
     )
-    parser.add_argument("--light-max-chunks", type=int, default=None, help="light 模式下构图最多发送的文本块数，默认 120")
-    parser.add_argument("--light-chunk-size", type=int, default=None, help="light 模式下分块大小，默认 1200")
-    parser.add_argument("--light-chunk-overlap", type=int, default=None, help="light 模式下分块重叠，默认 40")
+    parser.add_argument("--light-max-chunks", type=int, default=None, help="Max text chunks sent for graph in light mode; default 120")
+    parser.add_argument("--light-chunk-size", type=int, default=None, help="Chunk size in light mode; default 1200")
+    parser.add_argument("--light-chunk-overlap", type=int, default=None, help="Chunk overlap in light mode; default 40")
 
-    parser.add_argument("--output", default=None, help="将结果写入 JSON 文件")
+    parser.add_argument("--output", default=None, help="Write results to a JSON file")
     return parser.parse_args()
 
 
@@ -70,7 +70,7 @@ def load_paths_from_file(list_file: str) -> List[str]:
     if not list_file:
         return []
     if not os.path.exists(list_file):
-        raise FileNotFoundError(f"--files-from 文件不存在: {list_file}")
+        raise FileNotFoundError(f"--files-from file not found: {list_file}")
 
     paths: List[str] = []
     with open(list_file, "r", encoding="utf-8") as f:
@@ -86,12 +86,12 @@ def load_json_config(config_path: str) -> Dict[str, Any]:
     if not config_path:
         return {}
     if not os.path.exists(config_path):
-        raise FileNotFoundError(f"--config 文件不存在: {config_path}")
+        raise FileNotFoundError(f"--config file not found: {config_path}")
 
     with open(config_path, "r", encoding="utf-8") as f:
         data = json.load(f)
     if not isinstance(data, dict):
-        raise ValueError("--config 内容必须是 JSON 对象")
+        raise ValueError("--config must be a JSON object")
     return data
 
 
@@ -120,7 +120,7 @@ def build_options(args: argparse.Namespace) -> tuple[LocalPipelineOptions, str]:
     if isinstance(config_files, str):
         config_files = [config_files]
     if not isinstance(config_files, list):
-        raise ValueError("config.files 必须是字符串列表")
+        raise ValueError("config.files must be a list of strings")
 
     cli_files = args.files or []
     file_paths = [_resolve_path(str(p), config_dir) for p in config_files]
@@ -130,7 +130,7 @@ def build_options(args: argparse.Namespace) -> tuple[LocalPipelineOptions, str]:
     if files_from_value:
         file_paths.extend(load_paths_from_file(_resolve_path(str(files_from_value), config_dir)))
 
-    # 去重但保持顺序
+    # Deduplicate while preserving order
     deduped_paths: List[str] = []
     seen = set()
     for path in file_paths:
@@ -141,7 +141,7 @@ def build_options(args: argparse.Namespace) -> tuple[LocalPipelineOptions, str]:
         deduped_paths.append(abs_path)
 
     if not deduped_paths:
-        raise ValueError("请通过 --files、--files-from 或 --config 提供至少一个文档路径")
+        raise ValueError("Provide at least one document path via --files, --files-from, or --config")
 
     simulation_requirement = _config_value(
         args.simulation_requirement,
@@ -150,7 +150,7 @@ def build_options(args: argparse.Namespace) -> tuple[LocalPipelineOptions, str]:
         "",
     )
     if not simulation_requirement:
-        raise ValueError("请通过 --simulation-requirement 或 config.simulation_requirement 提供模拟需求描述")
+        raise ValueError("Provide simulation requirement via --simulation-requirement or config.simulation_requirement")
 
     if "multimodal_use_remote_analysis" in config:
         Config.MULTIMODAL_USE_REMOTE_ANALYSIS = bool(config["multimodal_use_remote_analysis"])
@@ -197,12 +197,12 @@ def main() -> int:
                 os.makedirs(out_dir, exist_ok=True)
             with open(output_path, "w", encoding="utf-8") as f:
                 json.dump(result, f, ensure_ascii=False, indent=2)
-            print_step(f"结果已写入: {output_path}")
+            print_step(f"Results written to: {output_path}")
 
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 0
     except Exception as e:
-        print("[ERROR] 执行失败")
+        print("[ERROR] Run failed")
         print(str(e))
         print(traceback.format_exc())
         return 1

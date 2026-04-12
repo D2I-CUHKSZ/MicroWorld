@@ -8,13 +8,13 @@ from lightworld.simulation.cluster_cli import (
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="LightWorld 一键全流程运行器")
-    parser.add_argument("--config", required=True, help="全流程配置文件路径（JSON）")
+    parser = argparse.ArgumentParser(description="LightWorld full pipeline runner")
+    parser.add_argument("--config", required=True, help="Path to full-run config (JSON)")
     parser.add_argument(
         "--cluster-method",
         choices=[CLUSTER_METHOD_THRESHOLD, CLUSTER_METHOD_LLM_KEYWORD],
         default=None,
-        help="覆盖本次运行的 cluster 方法；未指定时，交互终端会提示选择。",
+        help="Override cluster method for this run; if omitted, the interactive terminal prompts for choice.",
     )
     return parser.parse_args()
 

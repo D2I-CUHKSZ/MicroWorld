@@ -1,6 +1,6 @@
 """
-实体语义提示提取器
-参考 LightRAG 的信息蒸馏风格，为每个实体生成可用于聚类/检索的 prompts。
+Entity semantic prompt extractor.
+Following LightRAG-style information distillation, generates prompts for each entity usable in clustering/retrieval.
 """
 
 import json
@@ -18,7 +18,7 @@ logger = get_logger("lightworld.entity_prompt_extractor")
 
 
 class EntityPromptExtractor:
-    """为实体提取 keywords + semantic prompt 的轻量服务"""
+    """Lightweight service for extracting keywords + semantic prompts for entities"""
 
     _GENERIC_STOPWORDS = {
         "entity", "node", "this", "that", "with", "from", "for", "and", "the",
@@ -93,20 +93,20 @@ class EntityPromptExtractor:
         attrs_preview = json.dumps(attrs, ensure_ascii=False)[:1500]
 
         prompt = f"""
-你需要为一个图谱实体生成结构化语义提示，风格参考 LightRAG 的“实体摘要 + 关键词”抽取方式。
+Generate structured semantic prompts for a graph entity, following the LightRAG-style "entity summary + keywords" extraction approach.
 
-【任务要求】
-1. 提取 4-8 个高辨识关键词（keywords），优先实体主题词、角色词、议题词，不要空泛词。
-2. 写 1 段简洁描述（description），突出该实体的角色/立场/语义边界。
-3. 生成 1 条可用于检索和聚类的 semantic_prompt（1-2句）。
-4. 给出 2-6 个 topic_tags（话题标签）。
-5. 关键词必须避免以下内容：
-   - 占位词或空值：null / none / unknown
-   - JSON字段名、schema字段、英文属性名：name / media_type / case_role / institution 等
-   - 纯日期、纯数字、时间碎片：2025 / 08 / 07-30 / 2025-08-01
-   - 过长的完整句子或带明显语法残片的短语
+[Task Requirements]
+1. Extract 4-8 highly distinguishing keywords, prioritizing entity theme words, role words, and topic words. Avoid vague words.
+2. Write 1 concise description highlighting the entity's role/stance/semantic boundaries.
+3. Generate 1 semantic_prompt usable for retrieval and clustering (1-2 sentences).
+4. Provide 2-6 topic_tags.
+5. Keywords must avoid the following:
+   - Placeholder or null values: null / none / unknown
+   - JSON field names, schema fields, English attribute names: name / media_type / case_role / institution etc.
+   - Pure dates, pure numbers, time fragments: 2025 / 08 / 07-30 / 2025-08-01
+   - Overly long complete sentences or phrases with obvious grammar fragments
 
-【实体信息】
+[Entity Info]
 - name: {entity.name}
 - type: {entity_type}
 - summary: {entity.summary or ""}
@@ -115,7 +115,7 @@ class EntityPromptExtractor:
 - related_facts: {related_facts}
 - simulation_requirement: {simulation_requirement or ""}
 
-仅返回 JSON，对应字段如下：
+Return JSON only, with the following fields:
 {{
   "keywords": ["..."],
   "description": "...",
@@ -127,7 +127,7 @@ class EntityPromptExtractor:
         return [
             {
                 "role": "system",
-                "content": "你是图谱语义抽取助手，输出必须是高质量、可解析的JSON。"
+                "content": "You are a graph semantic extraction assistant. Output must be high-quality, parsable JSON."
             },
             {
                 "role": "user",
@@ -348,8 +348,8 @@ class EntityPromptExtractor:
             "keywords": keywords,
             "description": description,
             "semantic_prompt": (
-                f"实体 {entity.name}（类型: {entity_type}）。"
-                f"重点关注其角色定位、相关议题与关键关联词：{', '.join(keywords[:4])}。"
+                f"Entity {entity.name} (type: {entity_type}). "
+                f"Focus on its role positioning, related topics, and key associations: {', '.join(keywords[:4])}."
             ),
             "topic_tags": topic_tags
         }
@@ -418,7 +418,7 @@ class EntityPromptExtractor:
         if not description:
             description = (entity.summary or f"{entity_type}: {entity.name}")[:220]
         if not semantic_prompt:
-            semantic_prompt = f"实体 {entity.name}（类型: {entity_type}），总结其立场、功能与关键关联。"
+            semantic_prompt = f"Entity {entity.name} (type: {entity_type}), summarizing its stance, function, and key associations."
         if not dedup_keywords:
             dedup_keywords = heuristic_keywords[:6]
         if not dedup_tags:
@@ -448,7 +448,7 @@ class EntityPromptExtractor:
             result = self.llm.chat_json(messages=messages, temperature=0.2, max_tokens=1000)
             return self._normalize(entity, result)
         except Exception as e:
-            logger.warning(f"实体 {entity.name} prompt 提取失败，使用回退: {e}")
+            logger.warning(f"Entity {entity.name} prompt extraction failed, using fallback: {e}")
             return self._normalize(entity, self._fallback(entity))
 
     def extract_prompts(
@@ -468,11 +468,11 @@ class EntityPromptExtractor:
             results.append(prompt_data)
 
             if progress_callback:
-                progress_callback(idx, total, f"提取实体prompt: {entity.name}")
+                progress_callback(idx, total, f"Extracting entity prompt: {entity.name}")
 
         return results
 
     def save_prompts(self, prompts: List[Dict[str, Any]], file_path: str):
         with open(file_path, "w", encoding="utf-8") as f:
             json.dump(prompts, f, ensure_ascii=False, indent=2)
-        logger.info(f"实体 prompts 已保存: {file_path}, count={len(prompts)}")
+        logger.info(f"Entity prompts saved: {file_path}, count={len(prompts)}")

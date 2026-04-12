@@ -1,32 +1,33 @@
-# 武汉大学百科事件 示例
+# WHU Baike Event Example
 
-本示例演示如何使用 LightWorld 对武汉大学百度百科事件进行端到端的社会模拟与推演分析。
+This example demonstrates how to use LightWorld for an end-to-end social simulation
+and analysis of the Wuhan University Baidu Baike event.
 
-## 快速开始
+## Quick Start
 
 ```bash
-# 1. 确保已安装依赖
+# 1. Install dependencies
 cd /path/to/LightWorld
 uv sync
 
-# 2. 配置环境变量
+# 2. Configure environment
 cp .env.example .env
-# 编辑 .env，填入 LLM_API_KEY 和 ZEP_API_KEY
+# Edit .env, set LLM_API_KEY and ZEP_API_KEY
 
-# 3. 运行全流程
-uv run lightworld-full-run --config configs/full_run/whu_baike_event.json
+# 3. Run full pipeline
+uv run lightworld-full-run --config configs/full_run/full_run.template.json
 ```
 
-## 输入数据
+## Input Data
 
-示例输入数据位于 `data/examples/whu_baike_event/`，包含：
+Example input data is located in `data/examples/whu_baike_event/`, including:
 
-- 事件概述文档
-- 事件时间线
-- 相关图片和视频
-- 数据来源清单
+- Event overview document
+- Event timeline
+- Related images and videos
+- Source manifest
 
-## 输出
+## Output
 
-运行结束后，产物将写入 `backend/uploads/full_runs/run_<timestamp>/` 目录，
-包含 `run_manifest.json` 作为所有产物的索引入口。
+After the run completes, artifacts are written to `runs/run_<timestamp>/`,
+with `run_manifest.json` as the single entry point for all artifacts.

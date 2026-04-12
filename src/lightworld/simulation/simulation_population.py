@@ -40,24 +40,24 @@ _ELITE_TYPES = {
 }
 
 _KINSHIP_ROLES = {
-    "母亲": "mother",
-    "妈妈": "mother",
-    "父亲": "father",
-    "爸爸": "father",
-    "家属": "family",
+    "母亲": "mother",   # Chinese: mother (formal)
+    "妈妈": "mother",   # Chinese: mother (informal)
+    "父亲": "father",   # Chinese: father (formal)
+    "爸爸": "father",   # Chinese: father (informal)
+    "家属": "family",   # Chinese: family member
 }
 
 _NOISY_ROLE_PREFIXES = (
-    "涉事",
-    "当事",
-    "相关",
+    "涉事",  # Chinese: involved
+    "当事",  # Chinese: concerned party
+    "相关",  # Chinese: related
 )
 
 _GENERIC_PERSON_NAMES = {
-    "学生",
-    "教授",
-    "记者",
-    "老师",
+    "学生",  # Chinese: student
+    "教授",  # Chinese: professor
+    "记者",  # Chinese: journalist
+    "老师",  # Chinese: teacher
 }
 
 
@@ -387,66 +387,66 @@ class SimulationPopulationBuilder:
         counter: Counter[str] = Counter()
         for entity in entities:
             for token in re.findall(r"[\u4e00-\u9fff]{2,8}", f"{entity.name} {entity.summary or ''}"):
-                if token in {"武汉大学", "学生", "事件相关", "相关事项", "相关实体"}:
+                if token in {"武汉大学", "学生", "事件相关", "相关事项", "相关实体"}:  # generic stopwords
                     continue
                 counter[token] += 1
         for token in re.findall(r"[\u4e00-\u9fff]{2,8}", simulation_requirement or ""):
             counter[token] += 2
         topics = [token for token, _ in counter.most_common(8)]
-        return topics[:6] or ["程序正义", "校园舆情", "事实核查"]
+        return topics[:6] or ["procedural justice", "campus public opinion", "fact-checking"]
 
     def _ordinary_archetypes(self, topic_hints: List[str]) -> List[Dict[str, Any]]:
-        primary = topic_hints[0] if topic_hints else "校园舆情"
-        secondary = topic_hints[1] if len(topic_hints) > 1 else "程序正义"
-        tertiary = topic_hints[2] if len(topic_hints) > 2 else "事实核查"
+        primary = topic_hints[0] if topic_hints else "campus public opinion"
+        secondary = topic_hints[1] if len(topic_hints) > 1 else "procedural justice"
+        tertiary = topic_hints[2] if len(topic_hints) > 2 else "fact-checking"
         return [
             {
-                "name_prefix": "围观学生",
+                "name_prefix": "Observer_Student",
                 "label": "Student",
                 "segment": "campus_observer",
-                "summary": f"普通在校学生，关注{primary}与{secondary}，容易被同伴讨论和热门帖带动，会发短评和跟帖求证。",
+                "summary": f"Ordinary campus student, follows {primary} and {secondary}, easily influenced by peer discussions and trending posts, posts short comments and follows up for verification.",
                 "stance": "uncertain",
-                "topics": [primary, secondary, "校园讨论"],
+                "topics": [primary, secondary, "campus discussion"],
             },
             {
-                "name_prefix": "求证型网友",
+                "name_prefix": "FactChecker_User",
                 "label": "Person",
                 "segment": "fact_checker",
-                "summary": f"普通网民，习惯核对截图和时间线，重点关注{tertiary}与{secondary}，倾向追问来源和证据链。",
+                "summary": f"Ordinary netizen, habitually verifies screenshots and timelines, focuses on {tertiary} and {secondary}, tends to question sources and evidence chains.",
                 "stance": "procedural",
-                "topics": [tertiary, secondary, "证据链"],
+                "topics": [tertiary, secondary, "evidence chain"],
             },
             {
-                "name_prefix": "情绪型路人",
+                "name_prefix": "Emotional_Bystander",
                 "label": "Person",
                 "segment": "emotional_bystander",
-                "summary": f"普通围观用户，先看情绪和立场，再补看细节，容易被{primary}相关内容激发强烈表达。",
+                "summary": f"Ordinary bystander user, looks at emotions and stances first then details, easily triggered by {primary}-related content into strong expressions.",
                 "stance": "emotional",
-                "topics": [primary, "情绪表达", "站队"],
+                "topics": [primary, "emotional expression", "taking sides"],
             },
             {
-                "name_prefix": "校友观察者",
+                "name_prefix": "Alumni_Observer",
                 "label": "Person",
                 "segment": "alumni_like",
-                "summary": f"普通校友型用户，关注学校声誉、{secondary}和制度修复，倾向提出建设性意见。",
+                "summary": f"Alumni-type user, concerned about school reputation, {secondary} and institutional reform, tends to offer constructive suggestions.",
                 "stance": "constructive",
-                "topics": ["校誉", secondary, "制度修复"],
+                "topics": ["school reputation", secondary, "institutional reform"],
             },
             {
-                "name_prefix": "家长视角用户",
+                "name_prefix": "Parent_View_User",
                 "label": "Person",
                 "segment": "parent_view",
-                "summary": f"普通家长型用户，关心学生安全、{primary}和学校处理方式，反感网暴和失控舆论。",
+                "summary": f"Parent-type user, cares about student safety, {primary} and how the school handles things, dislikes cyberbullying and uncontrolled public opinion.",
                 "stance": "protective",
-                "topics": ["学生安全", primary, "反网暴"],
+                "topics": ["student safety", primary, "anti-cyberbullying"],
             },
             {
-                "name_prefix": "吃瓜转发用户",
+                "name_prefix": "Amplifier_User",
                 "label": "Person",
                 "segment": "amplifier",
-                "summary": f"普通社交媒体用户，偏好快速转发热帖，对{primary}和爆点信息反应快，但不一定深挖事实。",
+                "summary": f"Ordinary social media user, prefers quickly reposting trending posts, reacts fast to {primary} and breaking information, but doesn't necessarily dig deep into facts.",
                 "stance": "amplifying",
-                "topics": [primary, "热点转发", "爆点信息"],
+                "topics": [primary, "trending reposts", "breaking info"],
             },
         ]
 

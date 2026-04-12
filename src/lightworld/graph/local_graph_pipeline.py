@@ -51,7 +51,7 @@ class LocalGraphPipeline:
         if max_chars <= 0 or len(text) <= max_chars:
             return text
 
-        marker = "\n\n...[light模式省略部分]...\n\n"
+        marker = "\n\n...[light mode: content omitted]...\n\n"
         if max_chars <= len(marker) * 2 + 64:
             return text[:max_chars]
 
@@ -92,13 +92,13 @@ class LocalGraphPipeline:
         progress_callback: Optional[Any] = None,
     ) -> Dict[str, Any]:
         if not opts.files:
-            raise ValueError("请提供至少一个文档路径")
+            raise ValueError("Please provide at least one document path")
 
         if not Config.LLM_API_KEY:
-            raise ValueError("LLM_API_KEY 未配置，无法生成本体")
+            raise ValueError("LLM_API_KEY is not configured, cannot generate ontology")
 
         if not self.zep_api_key:
-            raise ValueError("ZEP_API_KEY 未配置，无法构建图谱")
+            raise ValueError("ZEP_API_KEY is not configured, cannot build graph")
 
         def log_step(msg: str):
             if progress_callback:
@@ -106,26 +106,26 @@ class LocalGraphPipeline:
 
         project = None
         try:
-            log_step("创建项目")
+            log_step("Creating project")
             project = ProjectManager.create_project(name=opts.project_name)
             project.simulation_requirement = opts.simulation_requirement
             project.chunk_size = opts.chunk_size
             project.chunk_overlap = opts.chunk_overlap
             ProjectManager.save_project(project)
 
-            log_step("读取并提取本地文档文本")
+            log_step("Reading and extracting local document text")
             saved_inputs: List[Dict[str, str]] = []
             skipped = []
 
             for src in [os.path.abspath(p) for p in opts.files]:
                 if not os.path.exists(src):
-                    skipped.append((src, "文件不存在"))
+                    skipped.append((src, "File does not exist"))
                     continue
                 if not os.path.isfile(src):
-                    skipped.append((src, "不是文件"))
+                    skipped.append((src, "Not a file"))
                     continue
                 if not self._is_allowed_path(src):
-                    skipped.append((src, f"不支持格式，仅支持 {sorted(Config.ALLOWED_EXTENSIONS)}"))
+                    skipped.append((src, f"Unsupported format, only {sorted(Config.ALLOWED_EXTENSIONS)} allowed"))
                     continue
 
                 file_info = ProjectManager.save_local_file_to_project(project.project_id, src)
@@ -139,9 +139,9 @@ class LocalGraphPipeline:
                 })
 
             if not saved_inputs:
-                raise ValueError("没有可用文档可处理，请检查文件路径和格式")
+                raise ValueError("No valid documents to process, please check file paths and formats")
 
-            log_step("执行多模态输入解析")
+            log_step("Performing multimodal input parsing")
             ingestion = MultimodalIngestionService().ingest_files(
                 saved_inputs,
                 simulation_requirement=opts.simulation_requirement,
@@ -151,7 +151,7 @@ class LocalGraphPipeline:
             document_texts = ingestion.get("document_texts", [])
             all_text = ingestion.get("all_text", "")
             if not document_texts or not all_text.strip():
-                raise ValueError("多模态输入解析后未生成可用文本，请检查输入内容")
+                raise ValueError("Multimodal input parsing produced no usable text, please check input content")
 
             project.total_text_length = len(all_text)
             project.ingestion_summary = ingestion.get("manifest")
@@ -184,7 +184,7 @@ class LocalGraphPipeline:
                     "ontology_per_doc_max_chars": opts.light_ontology_max_chars,
                 }
 
-            log_step("生成本体定义")
+            log_step("Generating ontology definition")
             ontology = OntologyGenerator().generate(
                 document_texts=ontology_texts,
                 simulation_requirement=opts.simulation_requirement,
@@ -198,7 +198,7 @@ class LocalGraphPipeline:
             project.status = ProjectStatus.ONTOLOGY_GENERATED
             ProjectManager.save_project(project)
 
-            log_step("开始构建图谱（同步）")
+            log_step("Starting graph construction (synchronous)")
             graph_name = opts.graph_name or project.name or "LightWorld Graph"
             builder = GraphBuilderService(api_key=self.zep_api_key)
 
@@ -265,4 +265,4 @@ class LocalGraphPipeline:
                     ProjectManager.save_project(project)
                 except Exception:
                     pass
-            raise RuntimeError(f"本地管线执行失败: {e}\n{traceback.format_exc()}") from e
+            raise RuntimeError(f"Local pipeline execution failed: {e}\n{traceback.format_exc()}") from e

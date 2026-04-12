@@ -35,27 +35,27 @@ from lightworld.ingestion.text_processor import TextProcessor
 logger = get_logger("lightworld.multimodal_ingestion")
 
 
-IMAGE_ANALYSIS_SYSTEM_PROMPT = """你是一个多模态内容分析助手。
+IMAGE_ANALYSIS_SYSTEM_PROMPT = """You are a multimodal content analysis assistant.
 
-你的任务是把图片转换为适合“社会舆情/群体行为模拟”的结构化证据。
-重点关注：
-1. 图片中的人物、组织、品牌、机构、平台、地点、事件主体
-2. 可见文字、横幅、字幕、海报、截图中的账号名或组织名
-3. 能影响社交传播的视觉信号：情绪、冲突、号召、象征物、Logo、立场线索
+Your task is to convert images into structured evidence suitable for "social opinion / group behavior simulation".
+Focus on:
+1. People, organizations, brands, institutions, platforms, locations, and event subjects in the image
+2. Visible text, banners, subtitles, posters, account names or organization names in screenshots
+3. Visual signals that may influence social dissemination: emotions, conflicts, calls to action, symbols, logos, stance cues
 
-必须只返回 JSON。"""
+You must return JSON only."""
 
 
-VIDEO_SEGMENT_SYSTEM_PROMPT = """你是一个视频片段分析助手。
+VIDEO_SEGMENT_SYSTEM_PROMPT = """You are a video segment analysis assistant.
 
-你的任务是把视频片段转换为适合“社会舆情/群体行为模拟”的结构化证据。
-请综合画面与转写文本，提取：
-1. 片段中的人物、组织、品牌、平台、地点、事件主体
-2. 片段正在发生的关键事件、行为和互动
-3. 画面中出现的可见文字、字幕、横幅、海报、Logo、账号名
-4. 可能驱动传播的情绪、立场、冲突、号召、公共议题线索
+Your task is to convert video segments into structured evidence suitable for "social opinion / group behavior simulation".
+Combine visual frames and transcribed text to extract:
+1. People, organizations, brands, platforms, locations, and event subjects in the segment
+2. Key events, behaviors, and interactions happening in the segment
+3. Visible text, subtitles, banners, posters, logos, account names in the frames
+4. Emotions, stances, conflicts, calls to action, and public issue cues that may drive dissemination
 
-必须只返回 JSON。"""
+You must return JSON only."""
 
 
 @dataclass
@@ -254,7 +254,7 @@ class MultimodalIngestionService:
                 additional_context=additional_context,
             )
 
-        raise ValueError(f"不支持的文件格式: {suffix}")
+        raise ValueError(f"Unsupported file format: {suffix}")
 
     def _ingest_text_file(self, file_path: str, display_name: str) -> FileIngestionResult:
         text = TextProcessor.preprocess_text(FileParser.extract_text(file_path))
@@ -290,7 +290,7 @@ class MultimodalIngestionService:
             with Image.open(file_path) as image:
                 width, height = image.size
         except Exception as exc:
-            warnings.append(f"读取图片尺寸失败: {exc}")
+            warnings.append(f"Failed to read image dimensions: {exc}")
 
         analysis = self._analyze_image_with_llm(
             file_path=file_path,
@@ -346,14 +346,14 @@ class MultimodalIngestionService:
         try:
             segments = self._extract_video_segments(file_path, cache_dir)
             if not segments:
-                raise RuntimeError("未能从视频中提取任何片段")
+                raise RuntimeError("Failed to extract any segments from the video")
 
             blocks: List[EvidenceBlock] = []
             for segment in segments:
                 transcript = self._transcribe_audio(segment.audio_path)
                 if segment.audio_path and not transcript:
                     warnings.append(
-                        f"视频片段 {segment.segment_index} 音频转写失败，继续仅使用画面描述"
+                        f"Audio transcription failed for video segment {segment.segment_index}, continuing with visual description only"
                     )
 
                 analysis = self._analyze_video_segment_with_llm(
@@ -431,25 +431,25 @@ class MultimodalIngestionService:
         try:
             client = self._get_llm_client()
         except Exception as exc:
-            logger.warning(f"图片分析未启用 LLM，使用回退结果: {exc}")
+            logger.warning(f"LLM not enabled for image analysis, using fallback: {exc}")
             return fallback
 
         prompt = f"""
-请分析这张图片，并输出适合社会模拟与图谱构建的结构化证据。
+Analyze this image and output structured evidence suitable for social simulation and graph construction.
 
 simulation_requirement:
-{simulation_requirement or "无"}
+{simulation_requirement or "N/A"}
 
 additional_context:
-{additional_context or "无"}
+{additional_context or "N/A"}
 
-请只返回 JSON，包含字段：
+Return JSON only, with the following fields:
 {{
-  "summary": "图片内容摘要，突出事件、主体、立场和场景",
-  "visible_text": "图片中可辨识文字，没有则为空字符串",
-  "key_entities": ["人物/组织/品牌/机构/平台/地点"],
-  "social_signals": ["情绪、冲突、号召、象征物、传播线索"],
-  "evidence_text": "供后续图谱和实体抽取使用的简洁文字证据"
+  "summary": "Image content summary, highlighting events, subjects, stances, and scenes",
+  "visible_text": "Recognizable text in the image, empty string if none",
+  "key_entities": ["people/organizations/brands/institutions/platforms/locations"],
+  "social_signals": ["emotions, conflicts, calls to action, symbols, dissemination cues"],
+  "evidence_text": "Concise textual evidence for downstream graph and entity extraction"
 }}
 """.strip()
 
@@ -473,7 +473,7 @@ additional_context:
                 max_tokens=1200,
             )
         except Exception as exc:
-            logger.warning(f"图片分析失败，使用回退结果: {exc}")
+            logger.warning(f"Image analysis failed, using fallback: {exc}")
             return fallback
 
         return {
@@ -511,32 +511,32 @@ additional_context:
         try:
             client = self._get_llm_client()
         except Exception as exc:
-            logger.warning(f"视频片段分析未启用 LLM，使用回退结果: {exc}")
+            logger.warning(f"LLM not enabled for video segment analysis, using fallback: {exc}")
             return fallback
 
         prompt = f"""
-请分析当前视频片段，并抽取适合图谱构建和社会模拟的结构化证据。
+Analyze this video segment and extract structured evidence suitable for graph construction and social simulation.
 
 video_segment:
 source={display_name}
 time={_format_seconds(start)}-{_format_seconds(end)}
 
 simulation_requirement:
-{simulation_requirement or "无"}
+{simulation_requirement or "N/A"}
 
 additional_context:
-{additional_context or "无"}
+{additional_context or "N/A"}
 
 transcript:
-{transcript or "无转写"}
+{transcript or "No transcript"}
 
-请只返回 JSON，包含字段：
+Return JSON only, with the following fields:
 {{
-  "summary": "片段摘要，突出主体、事件和互动",
-  "visible_text": "片段画面中的可见文字，没有则为空字符串",
-  "key_entities": ["人物/组织/品牌/地点/平台/节目/账号"],
-  "social_signals": ["情绪、冲突、号召、公共议题、传播线索"],
-  "evidence_text": "供后续实体抽取使用的简洁文字证据"
+  "summary": "Segment summary, highlighting subjects, events, and interactions",
+  "visible_text": "Visible text in the segment frames, empty string if none",
+  "key_entities": ["people/organizations/brands/locations/platforms/shows/accounts"],
+  "social_signals": ["emotions, conflicts, calls to action, public issues, dissemination cues"],
+  "evidence_text": "Concise textual evidence for downstream entity extraction"
 }}
 """.strip()
 
@@ -560,7 +560,7 @@ transcript:
             )
         except Exception as exc:
             logger.warning(
-                "视频片段分析失败，使用回退结果: "
+                "Video segment analysis failed, using fallback: "
                 f"{display_name} {_format_seconds(start)}-{_format_seconds(end)}: {exc}"
             )
             return fallback
@@ -596,10 +596,10 @@ transcript:
         if isinstance(item, dict):
             path = str(item.get("path", "") or "").strip()
             if not path:
-                raise ValueError(f"无效文件描述，缺少 path: {item}")
+                raise ValueError(f"Invalid file descriptor, missing path: {item}")
             display_name = str(item.get("display_name", "") or os.path.basename(path))
             return {"path": path, "display_name": display_name}
-        raise TypeError(f"不支持的文件描述类型: {type(item)}")
+        raise TypeError(f"Unsupported file descriptor type: {type(item)}")
 
     def _extract_video_segments(self, file_path: str, cache_dir: str) -> List[_VideoSegmentPayload]:
         backends = [
@@ -617,9 +617,9 @@ transcript:
                 errors.append(f"{backend.__name__}: {exc}")
 
         raise RuntimeError(
-            "视频解析失败。当前环境未检测到可用的视频后端。"
-            "请安装 ffmpeg、opencv-python 或 moviepy。"
-            + (f" 详细错误: {' | '.join(errors)}" if errors else "")
+            "Video parsing failed. No available video backend detected in the current environment. "
+            "Please install ffmpeg, opencv-python, or moviepy."
+            + (f" Details: {' | '.join(errors)}" if errors else "")
         )
 
     def _extract_video_segments_with_ffmpeg(
@@ -636,7 +636,7 @@ transcript:
             Config.MULTIMODAL_FFPROBE_PATH,
         )
         if not ffmpeg_path or not ffprobe_path:
-            raise RuntimeError("ffmpeg/ffprobe 不可用")
+            raise RuntimeError("ffmpeg/ffprobe not available")
 
         duration = self._probe_duration_with_ffprobe(file_path, ffprobe_path)
         segments = self._build_segment_windows(duration)
@@ -680,18 +680,18 @@ transcript:
         try:
             import cv2  # type: ignore
         except ImportError as exc:
-            raise RuntimeError("opencv-python 不可用") from exc
+            raise RuntimeError("opencv-python not available") from exc
 
         capture = cv2.VideoCapture(file_path)
         if not capture.isOpened():
-            raise RuntimeError("OpenCV 无法打开视频文件")
+            raise RuntimeError("OpenCV failed to open video file")
 
         fps = float(capture.get(cv2.CAP_PROP_FPS) or 0.0)
         frame_count = int(capture.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
         duration = (frame_count / fps) if fps > 0 and frame_count > 0 else 0.0
         if duration <= 0:
             capture.release()
-            raise RuntimeError("无法读取视频时长")
+            raise RuntimeError("Failed to read video duration")
 
         segments = self._build_segment_windows(duration)
         payloads: List[_VideoSegmentPayload] = []
@@ -735,13 +735,13 @@ transcript:
         try:
             from moviepy.video.io.VideoFileClip import VideoFileClip  # type: ignore
         except ImportError as exc:
-            raise RuntimeError("moviepy 不可用") from exc
+            raise RuntimeError("moviepy not available") from exc
 
         payloads: List[_VideoSegmentPayload] = []
         with VideoFileClip(file_path) as video:
             duration = float(video.duration or 0.0)
             if duration <= 0:
-                raise RuntimeError("moviepy 无法读取视频时长")
+                raise RuntimeError("moviepy failed to read video duration")
 
             segments = self._build_segment_windows(duration)
             for index, (start, end) in enumerate(segments):
@@ -769,7 +769,7 @@ transcript:
                         )
                 except Exception as exc:
                     logger.warning(
-                        "moviepy 提取音频失败，继续使用画面信息: "
+                        "moviepy audio extraction failed, continuing with visual info: "
                         f"{file_path}: {exc}"
                     )
 
@@ -804,7 +804,7 @@ transcript:
         payload = json.loads(result.stdout or "{}")
         duration = float(payload.get("format", {}).get("duration", 0.0) or 0.0)
         if duration <= 0:
-            raise RuntimeError("ffprobe 未返回有效时长")
+            raise RuntimeError("ffprobe returned no valid duration")
         return duration
 
     def _extract_frames_with_ffmpeg(
@@ -885,8 +885,8 @@ transcript:
             return client.transcribe_audio(audio_path, model=self.audio_model_name)
         except Exception as exc:
             logger.warning(
-                "音频转写失败: "
-                f"{exc}. 当前配置为 "
+                "Audio transcription failed: "
+                f"{exc}. Current config: "
                 f"base_url={Config.MULTIMODAL_AUDIO_BASE_URL}, "
                 f"model={self.audio_model_name}"
             )
@@ -905,7 +905,7 @@ transcript:
         for i in range(Config.MULTIMODAL_MAX_VIDEO_SEGMENTS):
             idx = int(round(i * last_index / max(Config.MULTIMODAL_MAX_VIDEO_SEGMENTS - 1, 1)))
             sampled.append(windows[idx])
-        # 去重，避免极短视频时重复采样
+        # Deduplicate to avoid repeated sampling for very short videos
         deduped: List[tuple[float, float]] = []
         seen = set()
         for start, end in sampled:

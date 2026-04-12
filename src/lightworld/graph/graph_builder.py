@@ -36,7 +36,7 @@ class GraphBuilderService:
     def __init__(self, api_key: Optional[str] = None):
         self.api_key = api_key or Config.ZEP_API_KEY
         if not self.api_key:
-            raise ValueError("ZEP_API_KEY 未配置")
+            raise ValueError("ZEP_API_KEY is not configured")
 
         self.client = Zep(api_key=self.api_key)
         self.task_manager = TaskManager()
@@ -85,7 +85,7 @@ class GraphBuilderService:
                 task_id,
                 status=TaskStatus.PROCESSING,
                 progress=5,
-                message="开始构建图谱..."
+                message="Starting graph construction..."
             )
 
 
@@ -93,7 +93,7 @@ class GraphBuilderService:
             self.task_manager.update_task(
                 task_id,
                 progress=10,
-                message=f"图谱已创建: {graph_id}"
+                message=f"Graph created: {graph_id}"
             )
 
 
@@ -101,7 +101,7 @@ class GraphBuilderService:
             self.task_manager.update_task(
                 task_id,
                 progress=15,
-                message="本体已设置"
+                message="Ontology configured"
             )
 
 
@@ -110,7 +110,7 @@ class GraphBuilderService:
             self.task_manager.update_task(
                 task_id,
                 progress=20,
-                message=f"文本已分割为 {total_chunks} 个块"
+                message=f"Text split into {total_chunks} chunks"
             )
 
 
@@ -127,7 +127,7 @@ class GraphBuilderService:
             self.task_manager.update_task(
                 task_id,
                 progress=60,
-                message="等待Zep处理数据..."
+                message="Waiting for Zep to process data..."
             )
 
             self._wait_for_episodes(
@@ -143,7 +143,7 @@ class GraphBuilderService:
             self.task_manager.update_task(
                 task_id,
                 progress=90,
-                message="获取图谱信息..."
+                message="Fetching graph info..."
             )
 
             graph_info = self._get_graph_info(graph_id)
@@ -275,7 +275,7 @@ class GraphBuilderService:
             if progress_callback:
                 progress = (i + len(batch_chunks)) / total_chunks
                 progress_callback(
-                    f"发送第 {batch_num}/{total_batches} 批数据 ({len(batch_chunks)} 块)...",
+                    f"Sending batch {batch_num}/{total_batches} ({len(batch_chunks)} chunks)...",
                     progress
                 )
 
@@ -304,7 +304,7 @@ class GraphBuilderService:
 
             except Exception as e:
                 if progress_callback:
-                    progress_callback(f"批次 {batch_num} 发送失败: {str(e)}", 0)
+                    progress_callback(f"Batch {batch_num} failed: {str(e)}", 0)
                 raise
 
         return episode_uuids
@@ -317,7 +317,7 @@ class GraphBuilderService:
     ):
         if not episode_uuids:
             if progress_callback:
-                progress_callback("无需等待（没有 episode）", 1.0)
+                progress_callback("No waiting needed (no episodes)", 1.0)
             return
 
         start_time = time.time()
@@ -326,13 +326,13 @@ class GraphBuilderService:
         total_episodes = len(episode_uuids)
 
         if progress_callback:
-            progress_callback(f"开始等待 {total_episodes} 个文本块处理...", 0)
+            progress_callback(f"Waiting for {total_episodes} text chunks to be processed...", 0)
 
         while pending_episodes:
             if time.time() - start_time > timeout:
                 if progress_callback:
                     progress_callback(
-                        f"部分文本块超时，已完成 {completed_count}/{total_episodes}",
+                        f"Some chunks timed out, completed {completed_count}/{total_episodes}",
                         completed_count / total_episodes
                     )
                 break
@@ -354,7 +354,7 @@ class GraphBuilderService:
             elapsed = int(time.time() - start_time)
             if progress_callback:
                 progress_callback(
-                    f"Zep处理中... {completed_count}/{total_episodes} 完成, {len(pending_episodes)} 待处理 ({elapsed}秒)",
+                    f"Zep processing... {completed_count}/{total_episodes} done, {len(pending_episodes)} pending ({elapsed}s)",
                     completed_count / total_episodes if total_episodes > 0 else 0
                 )
 
@@ -362,7 +362,7 @@ class GraphBuilderService:
                 time.sleep(3)
 
         if progress_callback:
-            progress_callback(f"处理完成: {completed_count}/{total_episodes}", 1.0)
+            progress_callback(f"Processing complete: {completed_count}/{total_episodes}", 1.0)
 
     def _get_graph_info(self, graph_id: str) -> GraphInfo:
 

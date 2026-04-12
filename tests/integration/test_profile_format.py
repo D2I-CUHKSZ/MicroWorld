@@ -8,9 +8,8 @@ from lightworld.simulation.oasis_profile_generator import OasisProfileGenerator,
 
 def test_profile_formats():
     print("=" * 60)
-    print("OASIS Profile格式测试")
+    print("OASIS profile format test")
     print("=" * 60)
-
 
     test_profiles = [
         OasisAgentProfile(
@@ -51,83 +50,91 @@ def test_profile_formats():
 
     generator = OasisProfileGenerator.__new__(OasisProfileGenerator)
 
-
     with tempfile.TemporaryDirectory() as temp_dir:
         twitter_path = os.path.join(temp_dir, "twitter_profiles.csv")
         reddit_path = os.path.join(temp_dir, "reddit_profiles.json")
 
-
-        print("\n1. 测试Twitter Profile (CSV格式)")
+        print("\n1. Twitter profile (CSV)")
         print("-" * 40)
         generator._save_twitter_csv(test_profiles, twitter_path)
 
-
-        with open(twitter_path, 'r', encoding='utf-8') as f:
+        with open(twitter_path, "r", encoding="utf-8") as f:
             reader = csv.DictReader(f)
             rows = list(reader)
 
-        print(f"   文件: {twitter_path}")
-        print(f"   行数: {len(rows)}")
-        print(f"   表头: {list(rows[0].keys())}")
-        print(f"\n   示例数据 (第1行):")
+        print(f"   File: {twitter_path}")
+        print(f"   Rows: {len(rows)}")
+        print(f"   Header: {list(rows[0].keys())}")
+        print("\n   Sample row (first):")
         for key, value in rows[0].items():
             print(f"     {key}: {value}")
 
-
-        required_twitter_fields = ['user_id', 'user_name', 'name', 'bio',
-                                   'friend_count', 'follower_count', 'statuses_count', 'created_at']
+        required_twitter_fields = [
+            "user_id",
+            "user_name",
+            "name",
+            "bio",
+            "friend_count",
+            "follower_count",
+            "statuses_count",
+            "created_at",
+        ]
         missing = set(required_twitter_fields) - set(rows[0].keys())
         if missing:
-            print(f"\n   [错误] 缺少字段: {missing}")
+            print(f"\n   [FAIL] Missing fields: {missing}")
         else:
-            print(f"\n   [通过] 所有必需字段都存在")
+            print("\n   [PASS] All required fields present")
 
-
-        print("\n2. 测试Reddit Profile (JSON详细格式)")
+        print("\n2. Reddit profile (JSON detail format)")
         print("-" * 40)
         generator._save_reddit_json(test_profiles, reddit_path)
 
-
-        with open(reddit_path, 'r', encoding='utf-8') as f:
+        with open(reddit_path, "r", encoding="utf-8") as f:
             reddit_data = json.load(f)
 
-        print(f"   文件: {reddit_path}")
-        print(f"   条目数: {len(reddit_data)}")
-        print(f"   字段: {list(reddit_data[0].keys())}")
-        print(f"\n   示例数据 (第1条):")
+        print(f"   File: {reddit_path}")
+        print(f"   Entries: {len(reddit_data)}")
+        print(f"   Keys: {list(reddit_data[0].keys())}")
+        print("\n   Sample entry (first):")
         print(json.dumps(reddit_data[0], ensure_ascii=False, indent=4))
 
-
-        required_reddit_fields = ['realname', 'username', 'bio', 'persona']
-        optional_reddit_fields = ['age', 'gender', 'mbti', 'country', 'profession', 'interested_topics']
+        required_reddit_fields = ["realname", "username", "bio", "persona"]
+        optional_reddit_fields = [
+            "age",
+            "gender",
+            "mbti",
+            "country",
+            "profession",
+            "interested_topics",
+        ]
 
         missing = set(required_reddit_fields) - set(reddit_data[0].keys())
         if missing:
-            print(f"\n   [错误] 缺少必需字段: {missing}")
+            print(f"\n   [FAIL] Missing required fields: {missing}")
         else:
-            print(f"\n   [通过] 所有必需字段都存在")
+            print("\n   [PASS] All required fields present")
 
         present_optional = set(optional_reddit_fields) & set(reddit_data[0].keys())
-        print(f"   [信息] 可选字段: {present_optional}")
+        print(f"   [INFO] Optional fields present: {present_optional}")
 
     print("\n" + "=" * 60)
-    print("测试完成!")
+    print("Tests finished.")
     print("=" * 60)
 
 
 def show_expected_formats():
     print("\n" + "=" * 60)
-    print("OASIS 期望的Profile格式参考")
+    print("OASIS expected profile format reference")
     print("=" * 60)
 
-    print("\n1. Twitter Profile (CSV格式)")
+    print("\n1. Twitter profile (CSV)")
     print("-" * 40)
     twitter_example = """user_id,user_name,name,bio,friend_count,follower_count,statuses_count,created_at
 0,user0,User Zero,I am user zero with interests in technology.,100,150,500,2023-01-01
 1,user1,User One,Tech enthusiast and coffee lover.,200,250,1000,2023-01-02"""
     print(twitter_example)
 
-    print("\n2. Reddit Profile (JSON详细格式)")
+    print("\n2. Reddit profile (JSON detail format)")
     print("-" * 40)
     reddit_example = [
         {
@@ -140,7 +147,7 @@ def show_expected_formats():
             "mbti": "ESTJ",
             "country": "UK",
             "profession": "Hospitality & Tourism",
-            "interested_topics": ["Economics", "Business"]
+            "interested_topics": ["Economics", "Business"],
         }
     ]
     print(json.dumps(reddit_example, ensure_ascii=False, indent=2))

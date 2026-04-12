@@ -165,7 +165,7 @@ def get_active_agents_for_round(
     round_num: int,
     topology_runtime: Optional[TopologyAwareRuntime] = None,
 ) -> List[Tuple[int, Any]]:
-    """根据时间和配置决定本轮激活哪些 Agent。"""
+    """Determine which agents to activate this round based on time and config."""
     time_config = config.get("time_config", {})
     agent_configs = config.get("agent_configs", [])
 
@@ -520,7 +520,7 @@ async def _apply_scheduled_events_for_round(
 
             event_config["hot_topics"] = sorted(current_set)
             log_info(
-                f"触发定时事件: hot_topics_update round={round_num}, "
+                f"Triggered scheduled event: hot_topics_update round={round_num}, "
                 f"topics={len(event_config['hot_topics'])}"
             )
             continue
@@ -536,19 +536,19 @@ async def _apply_scheduled_events_for_round(
             continue
 
         if event_type not in {"create_post", "create_comment", "create_thread"}:
-            log_info(f"跳过不支持的定时事件类型: {event_type}")
+            log_info(f"Skipping unsupported scheduled event type: {event_type}")
             continue
 
     for event in post_events:
         content = str(event.get("content", "") or "").strip()
         poster_agent_id = _coerce_positive_int(event.get("poster_agent_id"))
         if not content or poster_agent_id is None:
-            log_info(f"定时发帖事件缺少内容或发布者，已跳过: round={round_num}")
+            log_info(f"Scheduled post event missing content or poster, skipped: round={round_num}")
             continue
         try:
             agent = env.agent_graph.get_agent(poster_agent_id)
         except Exception:
-            log_info(f"定时发帖事件找不到Agent: agent_id={poster_agent_id}")
+            log_info(f"Scheduled post event agent not found: agent_id={poster_agent_id}")
             continue
         _append_initial_action(
             initial_actions=post_actions,
@@ -565,12 +565,12 @@ async def _apply_scheduled_events_for_round(
         root_content = str(event.get("root_content", "") or "").strip()
         poster_agent_id = _coerce_positive_int(event.get("poster_agent_id"))
         if not root_content or poster_agent_id is None:
-            log_info(f"定时 thread 事件缺少主帖内容或发布者，已跳过: round={round_num}")
+            log_info(f"Scheduled thread event missing root content or poster, skipped: round={round_num}")
             continue
         try:
             agent = env.agent_graph.get_agent(poster_agent_id)
         except Exception:
-            log_info(f"定时 thread 事件找不到Agent: agent_id={poster_agent_id}")
+            log_info(f"Scheduled thread event agent not found: agent_id={poster_agent_id}")
             continue
         _append_initial_action(
             initial_actions=post_actions,
@@ -586,9 +586,9 @@ async def _apply_scheduled_events_for_round(
     if post_actions:
         await env.step(post_actions)
         if post_events:
-            log_info(f"已执行定时事件帖子: round={round_num}, count={len(post_events)}")
+            log_info(f"Executed scheduled post events: round={round_num}, count={len(post_events)}")
         if thread_events:
-            log_info(f"已执行定时线程主帖: round={round_num}, count={len(thread_events)}")
+            log_info(f"Executed scheduled thread root posts: round={round_num}, count={len(thread_events)}")
 
     for event in thread_events:
         poster_agent_id = _coerce_positive_int(event.get("poster_agent_id"))
@@ -620,7 +620,7 @@ async def _apply_scheduled_events_for_round(
         content = str(event.get("content", "") or "").strip()
         poster_agent_id = _coerce_positive_int(event.get("poster_agent_id"))
         if not content or poster_agent_id is None:
-            log_info(f"定时评论事件缺少内容或发布者，已跳过: round={round_num}")
+            log_info(f"Scheduled comment event missing content or poster, skipped: round={round_num}")
             continue
         target_post_id = _resolve_target_post_id(
             db_path=db_path,
@@ -629,7 +629,7 @@ async def _apply_scheduled_events_for_round(
             poster_agent_id=poster_agent_id,
         )
         if target_post_id is None:
-            log_info(f"定时评论事件未找到目标帖子，已跳过: round={round_num}")
+            log_info(f"Scheduled comment event target post not found, skipped: round={round_num}")
             continue
         try:
             agent = env.agent_graph.get_agent(poster_agent_id)
@@ -648,7 +648,7 @@ async def _apply_scheduled_events_for_round(
 
     if comment_actions:
         await env.step(comment_actions)
-        log_info(f"已执行定时评论/回复: round={round_num}, count={len(comment_actions)}")
+        log_info(f"Executed scheduled comments/replies: round={round_num}, count={len(comment_actions)}")
 
     return scheduled_action_count
 
@@ -686,7 +686,7 @@ def _extract_platform_config(config: Dict[str, Any], platform_name: str) -> Dict
     if explicit_native:
         return defaults
 
-    # 兼容旧配置：旧字段并不被当前 OASIS 版本支持，回退到平台默认可调参数
+    # Legacy config compatibility: old fields not supported by current OASIS version, fall back to platform defaults
     if any(key in raw for key in LEGACY_PLATFORM_CONFIG_KEYS):
         return defaults
     return {}
@@ -740,9 +740,9 @@ def _apply_platform_config_best_effort(env: Any, platform_cfg: Dict[str, Any], l
                 break
 
     if applied > 0:
-        log_info(f"已接通平台配置（best-effort）: applied={applied}")
+        log_info(f"Platform config applied (best-effort): applied={applied}")
     else:
-        log_info("平台配置未映射到OASIS对象属性，继续使用OASIS默认参数")
+        log_info("Platform config not mapped to OASIS object attributes, using OASIS defaults")
     return applied
 
 
@@ -784,9 +784,9 @@ def _create_env(
                 semaphore=30,
             )
             setattr(env, "_lightworld_platform_config_applied", True)
-            log_info("已通过自定义 OASIS Platform 实例注入平台配置")
+            log_info("Injected platform config via custom OASIS Platform instance")
         except Exception as e:
-            log_info(f"通过自定义 Platform 注入平台配置失败，回退默认创建: {e}")
+            log_info(f"Failed to inject platform config via custom Platform, falling back to default: {e}")
             env = oasis.make(**kwargs)
             _apply_platform_config_best_effort(env, platform_cfg, log_info)
     else:
@@ -1024,10 +1024,10 @@ async def _sync_social_links_from_topology(
     inserted = _insert_follow_pairs_into_db(db_path, plan_pairs, agent_to_user)
     if inserted:
         topology_runtime.register_existing_follow_pairs(inserted)
-        log_info(f"已注入初始社交关系: db_follow_edges={len(inserted)}")
+        log_info(f"Injected initial social links: db_follow_edges={len(inserted)}")
         return len(inserted)
 
-    # 某些平台版本可能不允许直接写表，回退到 manual FOLLOW 动作
+    # Some platform versions may not allow direct table writes, fall back to manual FOLLOW actions
     manual_injected = await _inject_follow_pairs_via_manual_action(
         env=env,
         pairs=plan_pairs,
@@ -1036,12 +1036,12 @@ async def _sync_social_links_from_topology(
         max_pairs=manual_fallback_max_pairs,
     )
     if manual_injected > 0:
-        # 重新读取数据库中的 follow，转成 known pairs
+        # Re-read follow records from DB and convert to known pairs
         _, user_to_agent_after = _load_user_id_mapping(db_path)
         refreshed_pairs = _get_existing_follow_pairs(db_path, user_to_agent_after)
         if refreshed_pairs:
             topology_runtime.register_existing_follow_pairs(refreshed_pairs)
-        log_info(f"已通过动作回退注入社交关系: follow_actions={manual_injected}")
+        log_info(f"Injected social links via action fallback: follow_actions={manual_injected}")
     return manual_injected
 
 
@@ -1058,7 +1058,7 @@ async def run_platform_simulation(
     shutdown_event: Optional[Any] = None,
     state_update_fn: Optional[Callable[[str, str, int, Optional[str]], None]] = None,
 ) -> PlatformSimulation:
-    """按平台规格运行模拟。"""
+    """Run simulation according to platform spec."""
     result = PlatformSimulation()
 
     tag = spec.name.capitalize()
@@ -1080,12 +1080,12 @@ async def run_platform_simulation(
     stopped_early = False
 
     try:
-        log_info("初始化...")
+        log_info("Initializing...")
         model = create_model_fn(config, use_boost=spec.use_boost_model)
 
         profile_path = os.path.join(simulation_dir, spec.profile_filename)
         if not os.path.exists(profile_path):
-            message = f"错误: Profile文件不存在: {profile_path}"
+            message = f"Error: Profile file not found: {profile_path}"
             log_info(message)
             emit_state("failed", last_completed_round, message)
             return result
@@ -1125,12 +1125,12 @@ async def run_platform_simulation(
         )
 
         await result.env.reset()
-        log_info("环境已启动")
+        log_info("Environment started")
         emit_state("running", 0)
         if platform_cfg and not getattr(result.env, "_lightworld_platform_config_applied", False):
             _apply_platform_config_best_effort(result.env, platform_cfg, log_info)
 
-        # 启动前同步一次“图谱关系 -> 初始社交关系”
+        # Sync graph relations to initial social links before starting
         await _sync_social_links_from_topology(
             env=result.env,
             db_path=db_path,
@@ -1192,7 +1192,7 @@ async def run_platform_simulation(
 
             if initial_actions:
                 await result.env.step(initial_actions)
-                log_info(f"已发布 {len(initial_actions)} 条初始帖子")
+                log_info(f"Published {len(initial_actions)} initial posts")
 
         if action_logger:
             action_logger.log_round_end(0, initial_action_count)
@@ -1218,14 +1218,14 @@ async def run_platform_simulation(
             original_rounds = total_rounds
             total_rounds = min(total_rounds, max_rounds)
             if total_rounds < original_rounds:
-                log_info(f"轮数已截断: {original_rounds} -> {total_rounds} (max_rounds={max_rounds})")
+                log_info(f"Rounds truncated: {original_rounds} -> {total_rounds} (max_rounds={max_rounds})")
 
         start_time = datetime.now()
 
         for round_num in range(total_rounds):
             if shutdown_event and shutdown_event.is_set():
                 if main_logger:
-                    main_logger.info(f"收到退出信号，在第 {round_num + 1} 轮停止模拟")
+                    main_logger.info(f"Received shutdown signal, stopping simulation at round {round_num + 1}")
                 stopped_early = True
                 break
 
@@ -1329,7 +1329,7 @@ async def run_platform_simulation(
             )
 
             if social_link_sync_enabled and ((round_num + 1) % social_link_sync_interval == 0):
-                # 用最新拓扑结果增量同步弱曝光关系，让 topology-aware 结果进入平台曝光层
+                # Incrementally sync weak exposure links using latest topology results
                 await _sync_social_links_from_topology(
                     env=result.env,
                     db_path=db_path,
@@ -1377,7 +1377,7 @@ async def run_platform_simulation(
         elapsed = (datetime.now() - start_time).total_seconds()
         final_status = "stopped" if stopped_early else "completed"
         emit_state(final_status, last_completed_round)
-        log_info(f"模拟循环完成! 耗时: {elapsed:.1f}秒, 总动作: {total_actions}")
+        log_info(f"Simulation loop complete! Elapsed: {elapsed:.1f}s, total actions: {total_actions}")
         return result
     except Exception as e:
         emit_state("failed", last_completed_round, str(e))

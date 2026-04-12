@@ -30,7 +30,7 @@ def create_app(config_class=Config):
 
     if should_log_startup:
         logger.info("=" * 50)
-        logger.info("LightWorld Backend 启动中...")
+        logger.info("LightWorld Backend starting...")
         logger.info("=" * 50)
 
 
@@ -40,20 +40,20 @@ def create_app(config_class=Config):
     from .simulation.simulation_runner import SimulationRunner
     SimulationRunner.register_cleanup()
     if should_log_startup:
-        logger.info("已注册模拟进程清理函数")
+        logger.info("Registered simulation process cleanup handler")
 
 
     @app.before_request
     def log_request():
         logger = get_logger('lightworld.request')
-        logger.debug(f"请求: {request.method} {request.path}")
+        logger.debug(f"Request: {request.method} {request.path}")
         if request.content_type and 'json' in request.content_type:
-            logger.debug(f"请求体: {request.get_json(silent=True)}")
+            logger.debug(f"Request body: {request.get_json(silent=True)}")
 
     @app.after_request
     def log_response(response):
         logger = get_logger('lightworld.request')
-        logger.debug(f"响应: {response.status_code}")
+        logger.debug(f"Response: {response.status_code}")
         return response
 
 
@@ -68,6 +68,6 @@ def create_app(config_class=Config):
         return {'status': 'ok', 'service': 'LightWorld Backend'}
 
     if should_log_startup:
-        logger.info("LightWorld Backend 启动完成")
+        logger.info("LightWorld Backend startup complete")
 
     return app

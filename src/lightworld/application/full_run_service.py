@@ -40,8 +40,8 @@ class FullRunPaths:
         repo_root = Path(__file__).resolve().parents[3]
         return cls(
             repo_root=repo_root,
-            full_runs_dir=repo_root / "backend" / "uploads" / "full_runs",
-            latest_manifest_path=(repo_root / "backend" / "uploads" / "full_runs" / "latest.json"),
+            full_runs_dir=repo_root / "runs",
+            latest_manifest_path=(repo_root / "runs" / "latest.json"),
             projects_root=Path(Config.UPLOAD_FOLDER) / "projects",
             simulations_root=Path(Config.OASIS_SIMULATION_DATA_DIR),
             reports_root=Path(Config.REPORTS_DIR),
@@ -67,7 +67,7 @@ class FullRunService:
         with open(path, "r", encoding="utf-8") as f:
             data = json.load(f)
         if not isinstance(data, dict):
-            raise ValueError(f"配置文件必须是 JSON 对象: {path}")
+            raise ValueError(f"Config file must be a JSON object: {path}")
         return data
 
     def write_json(self, path: Path, payload: Dict[str, Any]):
@@ -88,7 +88,7 @@ class FullRunService:
 
     def load_paths_from_file(self, list_file: Path) -> List[Path]:
         if not list_file.exists():
-            raise FileNotFoundError(f"文件列表不存在: {list_file}")
+            raise FileNotFoundError(f"File list does not exist: {list_file}")
         paths: List[Path] = []
         with open(list_file, "r", encoding="utf-8") as f:
             for line in f:
@@ -140,7 +140,7 @@ class FullRunService:
         if isinstance(files_value, str):
             files_value = [files_value]
         if not isinstance(files_value, list):
-            raise ValueError("config.files 必须是字符串列表")
+            raise ValueError("config.files must be a list of strings")
 
         file_paths = [str(self.resolve_path(str(item), config_dir)) for item in files_value]
         files_from = config.get("files_from", "")
@@ -232,11 +232,11 @@ class FullRunService:
         graph_id = str((pipeline_result.get("graph") or {}).get("graph_id") or "")
         project = ProjectManager.get_project(project_id)
         if project is None:
-            raise ValueError(f"项目不存在: {project_id}")
+            raise ValueError(f"Project not found: {project_id}")
 
         document_text = ProjectManager.get_extracted_text(project_id)
         if not document_text:
-            raise ValueError("提取文本为空，无法准备模拟")
+            raise ValueError("Extracted text is empty; cannot prepare simulation")
 
         defined_entity_types = [
             str(item.get("name"))
@@ -251,7 +251,7 @@ class FullRunService:
             enable_twitter=bool(sim_cfg.get("enable_twitter", True)),
             enable_reddit=bool(sim_cfg.get("enable_reddit", True)),
         )
-        self.print_step(f"[Prepare] 创建 simulation: {state.simulation_id}")
+        self.print_step(f"[Prepare] Created simulation: {state.simulation_id}")
 
         def progress(stage: str, percent: int, message: str, **kwargs):
             current = kwargs.get("current")
@@ -275,7 +275,7 @@ class FullRunService:
     def apply_simulation_config_overrides(self, simulation_dir: Path, run_dir: Path, config: Dict[str, Any]):
         config_path = simulation_dir / "simulation_config.json"
         if not config_path.exists():
-            raise FileNotFoundError(f"simulation_config.json 不存在: {config_path}")
+            raise FileNotFoundError(f"simulation_config.json not found: {config_path}")
 
         simulation_cfg = config.get("simulation", {}) or {}
         config_overrides = simulation_cfg.get("config_overrides", {}) or {}
@@ -322,7 +322,7 @@ class FullRunService:
         if max_rounds is not None:
             cmd.extend(["--max-rounds", str(int(max_rounds))])
 
-        self.print_step("[Run] 启动并行模拟")
+        self.print_step("[Run] Starting parallel simulation")
         subprocess.run(cmd, cwd=str(simulation_dir), env=os.environ.copy(), check=True)
 
     def maybe_generate_report(
@@ -337,7 +337,7 @@ class FullRunService:
 
         project = ProjectManager.get_project(str(prepare_state["project_id"]))
         if project is None:
-            raise ValueError(f"项目不存在: {prepare_state['project_id']}")
+            raise ValueError(f"Project not found: {prepare_state['project_id']}")
 
         report_id = str(report_cfg.get("report_id", "") or "").strip() or None
         report_mode = str(report_cfg.get("mode", "public_report") or "public_report")
@@ -439,45 +439,45 @@ class FullRunService:
                 if target.exists():
                     report_lines.append(f"- `{name}`")
         else:
-            self.write_text(report_view_dir / "README.md", "本次运行未生成最终报告。\n")
-            report_lines.append("- 本次运行未生成最终报告。")
+            self.write_text(report_view_dir / "README.md", "No final report was generated for this run.\n")
+            report_lines.append("- No final report was generated for this run.")
 
         guide_lines = [
             "# Run Artifact Guide",
             "",
-            f"- 运行目录: `{run_dir}`",
-            f"- 项目ID: `{project_id}`",
-            f"- 图谱ID: `{str((pipeline_result.get('graph') or {}).get('graph_id') or '')}`",
-            f"- 模拟ID: `{simulation_id}`",
+            f"- Run directory: `{run_dir}`",
+            f"- Project ID: `{project_id}`",
+            f"- Graph ID: `{str((pipeline_result.get('graph') or {}).get('graph_id') or '')}`",
+            f"- Simulation ID: `{simulation_id}`",
             "",
-            "这个时间戳目录是本次实验的集中视图。",
-            "真实文件仍然保存在 `input2graph/projects`、`output/simulations`、`output/reports` 中，以保持现有逻辑兼容。",
-            "这里提供的是更容易寻找的同目录入口；大多数条目是符号链接，少数环境下会自动退回为复制。",
+            "This timestamped directory is a consolidated view of this experiment.",
+            "Canonical files remain under `input2graph/projects`, `output/simulations`, and `output/reports` for compatibility with existing logic.",
+            "This folder provides colocated entry points for easier discovery; most entries are symlinks, and in some environments they fall back to copies.",
             "",
             "## 01_project_artifacts",
             "",
-            "- `project_workspace`: 项目原始目录入口",
-            "- `input_files`: 本次项目复制后的输入文件",
-            "- `project_metadata.json`: 项目元数据",
-            "- `extracted_text.txt`: 提取出的全文文本",
-            "- `parsed_content.json`: 多模态解析结果",
-            "- `source_manifest.json`: 输入文件清单",
+            "- `project_workspace`: Project workspace root",
+            "- `input_files`: Input files copied for this project",
+            "- `project_metadata.json`: Project metadata",
+            "- `extracted_text.txt`: Extracted full text",
+            "- `parsed_content.json`: Multimodal parse output",
+            "- `source_manifest.json`: Input file manifest",
             "",
             "## 02_simulation_artifacts",
             "",
-            "- `simulation_workspace`: 模拟原始目录入口",
-            "- `simulation_status.json`: 模拟准备状态",
-            "- `simulation_env_status.json`: 运行结束状态",
-            "- `simulation_runtime_log.log`: 主日志",
-            "- `generated_simulation_config.json`: 实际运行使用的模拟配置",
-            "- `original_simulation_config.json`: 覆盖前的原始模拟配置",
-            "- `entity_prompts.json`: 实体画像提示",
-            "- `entity_graph_snapshot.json`: 初始实体图快照",
-            "- `social_relation_graph.json`: 社交关系图",
-            "- `twitter_profiles.csv` / `reddit_profiles.json`: 双平台人设文件",
-            "- `twitter_actions.jsonl` / `reddit_actions.jsonl`: 双平台动作日志",
-            "- `twitter_simulation.db` / `reddit_simulation.db`: 双平台数据库",
-            "- `twitter_memory.json` / `reddit_memory.json`: 双平台记忆产物",
+            "- `simulation_workspace`: Simulation workspace root",
+            "- `simulation_status.json`: Simulation preparation status",
+            "- `simulation_env_status.json`: Post-run environment status",
+            "- `simulation_runtime_log.log`: Main runtime log",
+            "- `generated_simulation_config.json`: Simulation config used for the run",
+            "- `original_simulation_config.json`: Original simulation config before overrides",
+            "- `entity_prompts.json`: Entity profile prompts",
+            "- `entity_graph_snapshot.json`: Initial entity graph snapshot",
+            "- `social_relation_graph.json`: Social relation graph",
+            "- `twitter_profiles.csv` / `reddit_profiles.json`: Cross-platform persona files",
+            "- `twitter_actions.jsonl` / `reddit_actions.jsonl`: Cross-platform action logs",
+            "- `twitter_simulation.db` / `reddit_simulation.db`: Cross-platform databases",
+            "- `twitter_memory.json` / `reddit_memory.json`: Cross-platform memory artifacts",
             "",
         ]
         guide_lines.extend(report_lines)
@@ -562,22 +562,22 @@ class FullRunService:
     def run(self, config_path: Path, cluster_method_override: Optional[str] = None) -> Dict[str, Any]:
         config_path = config_path.resolve()
         if not config_path.exists():
-            raise FileNotFoundError(f"配置文件不存在: {config_path}")
+            raise FileNotFoundError(f"Config file not found: {config_path}")
 
         self.ensure_runtime_env()
         config = self.read_json(config_path)
         config_dir = config_path.parent
         files = self.collect_input_files(config, config_dir)
         if not files:
-            raise ValueError("请在配置文件中通过 files 或 files_from 提供至少一个输入文件")
+            raise ValueError("Provide at least one input file via files or files_from in the config")
         if not str(config.get("simulation_requirement", "") or "").strip():
-            raise ValueError("请在配置文件中提供 simulation_requirement")
+            raise ValueError("simulation_requirement must be set in the config")
 
         current_method = self.detect_cluster_method(config)
         selected_cluster_method = maybe_prompt_cluster_method(cluster_method_override, current_method)
         if selected_cluster_method:
             apply_cluster_method_to_full_run_config(config, selected_cluster_method)
-            self.print_step(f"[Config] cluster 方法: {describe_cluster_method(selected_cluster_method)}")
+            self.print_step(f"[Config] Cluster method: {describe_cluster_method(selected_cluster_method)}")
 
         run_dir = self.create_run_dir(config, config_path)
         self.write_json(run_dir / "run_config.json", config)
@@ -616,5 +616,5 @@ class FullRunService:
         )
         self.write_json(run_dir / "run_manifest.json", manifest)
         self.write_json(self.paths.latest_manifest_path, manifest)
-        self.print_step(f"[Done] 全流程完成，运行清单: {run_dir / 'run_manifest.json'}")
+        self.print_step(f"[Done] Full run finished. Manifest: {run_dir / 'run_manifest.json'}")
         return manifest

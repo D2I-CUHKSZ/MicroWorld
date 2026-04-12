@@ -8,18 +8,21 @@ from lightworld.ingestion.multimodal_ingestion import (
 
 def test_ingest_text_and_image_files(tmp_path):
     text_path = tmp_path / "brief.txt"
-    text_path.write_text("武汉大学回应网络舆情，校友和媒体持续跟进。", encoding="utf-8")
+    text_path.write_text(
+        "Wuhan University responded to online sentiment; alumni and media kept following up.",
+        encoding="utf-8",
+    )
 
     image_path = tmp_path / "poster.png"
     Image.new("RGB", (32, 24), color=(255, 255, 255)).save(image_path)
 
     service = MultimodalIngestionService()
     service._analyze_image_with_llm = lambda *args, **kwargs: {
-        "summary": "海报显示高校声明和媒体报道截图。",
-        "visible_text": "武汉大学 官方声明",
-        "key_entities": ["武汉大学", "媒体"],
-        "social_signals": ["官方回应", "舆论扩散"],
-        "evidence_text": "图片包含高校声明与媒体传播线索。",
+        "summary": "Poster shows a university statement and media screenshot.",
+        "visible_text": "Wuhan University official statement",
+        "key_entities": ["Wuhan University", "media"],
+        "social_signals": ["official response", "sentiment spread"],
+        "evidence_text": "Image contains statement cues and media circulation hints.",
     }
 
     result = service.ingest_files(
@@ -27,7 +30,7 @@ def test_ingest_text_and_image_files(tmp_path):
             {"path": str(text_path), "display_name": "brief.txt"},
             {"path": str(image_path), "display_name": "poster.png"},
         ],
-        simulation_requirement="模拟高校品牌舆情传播",
+        simulation_requirement="Simulate university brand sentiment spread",
     )
 
     assert len(result["document_texts"]) == 2
@@ -35,9 +38,9 @@ def test_ingest_text_and_image_files(tmp_path):
     assert result["manifest"]["block_count"] == 2
     assert "document" in result["manifest"]["modalities"]
     assert "image" in result["manifest"]["modalities"]
-    assert "武汉大学回应网络舆情" in result["all_text"]
+    assert "Wuhan University responded to online sentiment" in result["all_text"]
     assert "[IMAGE][source=poster.png]" in result["all_text"]
-    assert "VisibleText: 武汉大学 官方声明" in result["all_text"]
+    assert "VisibleText: Wuhan University official statement" in result["all_text"]
 
 
 def test_ingest_video_file_uses_segment_blocks(tmp_path):
@@ -59,23 +62,25 @@ def test_ingest_video_file_uses_segment_blocks(tmp_path):
             audio_path=None,
         )
     ]
-    service._transcribe_audio = lambda *_args, **_kwargs: "学生发布视频，媒体随后转载。"
+    service._transcribe_audio = lambda *_args, **_kwargs: (
+        "A student posted video; outlets reposted it afterward."
+    )
     service._analyze_video_segment_with_llm = lambda *args, **kwargs: {
-        "summary": "视频片段展示校园声明发布与媒体跟进。",
-        "visible_text": "官方声明",
-        "key_entities": ["学生", "媒体", "高校"],
-        "social_signals": ["声明发布", "媒体转载"],
-        "evidence_text": "视频画面和转写都表明事件进入公开传播阶段。",
+        "summary": "Clip shows campus statement release and media follow-up.",
+        "visible_text": "Official statement",
+        "key_entities": ["student", "media", "university"],
+        "social_signals": ["statement release", "media republication"],
+        "evidence_text": "Video and transcript show the incident entered public spread.",
     }
 
     result = service.ingest_files(
         [{"path": str(video_path), "display_name": "news.mp4"}],
-        simulation_requirement="模拟校园事件扩散",
+        simulation_requirement="Simulate campus incident diffusion",
     )
 
     assert result["manifest"]["file_count"] == 1
     assert result["manifest"]["block_count"] == 1
     assert result["manifest"]["modalities"] == ["video"]
     assert "[VIDEO_SEGMENT][source=news.mp4][00:00:00-00:00:30]" in result["all_text"]
-    assert "Transcript: 学生发布视频，媒体随后转载。" in result["all_text"]
-    assert "KeyEntities: 学生, 媒体, 高校" in result["all_text"]
+    assert "Transcript: A student posted video; outlets reposted it afterward." in result["all_text"]
+    assert "KeyEntities: student, media, university" in result["all_text"]
