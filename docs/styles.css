@@ -21,7 +21,7 @@
   --radius: 10px;
   --radius-lg: 18px;
   --radius-xl: 28px;
-  --max-width: 1120px;
+  --max-width: 1360px;
   --transition: 180ms ease;
   --mono: "IBM Plex Mono", "SFMono-Regular", monospace;
   --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -648,7 +648,7 @@ nav {
 }
 
 .subpage-desc {
-  max-width: 760px;
+  max-width: 920px;
   margin: 0;
   color: var(--text-secondary);
   font-size: 1rem;
@@ -892,6 +892,185 @@ nav {
   min-height: 100%;
 }
 
+.diagram-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.diagram-panel {
+  display: grid;
+  gap: 18px;
+}
+
+.diagram-panel-wide {
+  grid-column: 1 / -1;
+}
+
+.diagram-flow {
+  display: grid;
+  grid-template-columns:
+    minmax(190px, 1.1fr) 52px
+    minmax(190px, 1.1fr) 52px
+    minmax(190px, 1.1fr) 52px
+    minmax(190px, 1.1fr) 52px
+    minmax(190px, 1.1fr);
+  gap: 12px;
+  align-items: stretch;
+}
+
+.diagram-node,
+.diagram-layer,
+.deployment-node {
+  position: relative;
+  overflow: hidden;
+  padding: 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.045);
+  box-shadow: var(--shadow-sm);
+}
+
+.diagram-node::before,
+.diagram-layer::before,
+.deployment-node::before,
+.sequence-step::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(45, 212, 191, 0.28), transparent);
+}
+
+.diagram-node-label,
+.diagram-layer-kicker {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(45, 212, 191, 0.11);
+  color: var(--primary);
+  font-size: 0.74rem;
+  font-family: var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.diagram-node strong,
+.diagram-layer strong,
+.deployment-node strong,
+.sequence-step strong {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 1rem;
+  line-height: 1.3;
+}
+
+.diagram-node p,
+.diagram-layer p,
+.deployment-node p,
+.sequence-step p {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+.diagram-node p {
+  font-size: 0.93rem;
+}
+
+.diagram-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  min-width: 68px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  font-family: var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.diagram-arrow::after {
+  content: "→";
+  margin-left: 8px;
+  color: var(--primary);
+}
+
+.diagram-layer-stack,
+.diagram-sequence {
+  display: grid;
+  gap: 14px;
+}
+
+.diagram-layer {
+  padding-left: 22px;
+}
+
+.diagram-layer::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 14px;
+  bottom: 14px;
+  width: 4px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(45, 212, 191, 0.85), rgba(45, 212, 191, 0.18));
+}
+
+.sequence-step {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+  padding: 16px 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.sequence-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 30px;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.14);
+  color: var(--accent);
+  font-size: 0.76rem;
+  font-family: var(--mono);
+}
+
+.deployment-map {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.deployment-divider {
+  display: grid;
+  place-items: center;
+  min-width: 112px;
+  padding: 16px 8px;
+  border-radius: 999px;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  font-family: var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
 .gallery-board h3,
 .comparison-board h3,
 .runtime-signal-panel h3 {
@@ -907,6 +1086,63 @@ nav {
 
 .gallery-grid {
   margin-top: 18px;
+}
+
+.lk99-feature-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(320px, 0.92fr);
+  gap: 20px;
+}
+
+.lk99-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.story-image-card {
+  margin: 0;
+  overflow: hidden;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: var(--shadow-sm);
+}
+
+.story-image-card img {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+}
+
+.story-image-card figcaption {
+  padding: 12px 14px 14px;
+  color: var(--text-secondary);
+  font-size: 0.84rem;
+  line-height: 1.6;
+}
+
+.lk99-stage-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.lk99-stage-strip span {
+  display: grid;
+  place-items: center;
+  min-height: 54px;
+  padding: 12px 10px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.04));
+  color: var(--text-secondary);
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .gallery-caption-grid {
@@ -1191,6 +1427,10 @@ nav {
   font-size: 0.88rem;
 }
 
+.lk99-image-note {
+  margin-top: 18px;
+}
+
 .insight-box {
   margin-top: 18px;
   border-left: 4px solid var(--accent);
@@ -1326,13 +1566,34 @@ footer {
   .demo-grid,
   .deployment-grid,
   .demo-mock,
+  .lk99-feature-shell,
   .system-cockpit,
   .experiment-shell,
   .runtime-board,
   .operations-grid,
   .example-dashboard,
-  .artifact-board {
+  .artifact-board,
+  .diagram-grid {
     grid-template-columns: 1fr;
+  }
+
+  .diagram-panel-wide {
+    grid-column: auto;
+  }
+
+  .diagram-flow,
+  .deployment-map {
+    grid-template-columns: 1fr;
+  }
+
+  .diagram-arrow,
+  .deployment-divider {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .diagram-arrow::after {
+    content: "↓";
   }
 
   .hero h1 {
@@ -1357,6 +1618,7 @@ footer {
   .overview-grid,
   .landing-grid,
   .architecture-row,
+  .lk99-gallery-grid,
   .image-grid,
   .metric-grid,
   .runtime-feature-grid,
@@ -1365,8 +1627,13 @@ footer {
   .gallery-caption-grid,
   .placeholder-stack,
   .pipeline-shell,
-  .artifact-board {
+  .artifact-board,
+  .diagram-grid {
     grid-template-columns: 1fr;
+  }
+
+  .lk99-stage-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .hero-stat-grid {

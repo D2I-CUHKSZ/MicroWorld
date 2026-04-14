@@ -58,6 +58,20 @@ The public site now presents the LK-99 room-temperature-superconductor news cycl
 | Readable narrative arc | The run moves from hype and speculation to verification and disillusion. |
 | Inspectable artifacts | Reviewers can still inspect prompts, configs, topology traces, and reports. |
 
+## LK-99 Demo Glimpse
+
+<p align="center">
+  <img src="docs/assets/lk99/pic1.png" width="48%" alt="LK-99 media screenshot showing a levitation-style demonstration clip" />
+  <img src="docs/assets/lk99/pic3.png" width="48%" alt="Illustrative visual for room-temperature superconductivity and magnetic levitation" />
+</p>
+<p align="center">
+  <img src="docs/assets/lk99/pic2.png" width="48%" alt="Annotated LK-99 demonstration frame highlighting magnet, levitation, and sample pellet" />
+  <img src="docs/assets/lk99/pic4.png" width="48%" alt="Figure strip showing synthesis conditions and LK-99 sample images" />
+</p>
+<p align="center">
+  These images help explain the example at a glance: a striking claim, visual evidence fragments, public-facing explanation, and the later move toward technical scrutiny.
+</p>
+
 ## System Architecture
 
 ```mermaid
