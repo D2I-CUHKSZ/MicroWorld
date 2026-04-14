@@ -32,7 +32,7 @@ def test_merge_alias_entities_merges_university_aliases():
 
 
 def test_add_ordinary_users_increases_non_elite_population():
-    builder = SimulationPopulationBuilder()
+    builder = SimulationPopulationBuilder(use_llm_topic_hints=False)
     entities = [
         make_entity(f"press_outlet_{i}", "MediaOutlet", "Press coverage")
         for i in range(10)
@@ -45,7 +45,7 @@ def test_add_ordinary_users_increases_non_elite_population():
 
     augmented, synthetic = builder.add_ordinary_users(
         entities,
-        simulation_requirement="Simulate campus sentiment, procedural justice, and fact-checking",
+        simulation_requirement="Simulate technical controversy, fact-checking, and impact assessment",
         ordinary_ratio_target=0.5,
         max_synthetic_entities=12,
     )
@@ -53,3 +53,5 @@ def test_add_ordinary_users_increases_non_elite_population():
     assert len(synthetic) > 0
     assert len(augmented) > len(entities)
     assert all(item.attributes.get("synthetic_population") for item in synthetic)
+    assert all("校园" not in item.summary for item in synthetic)
+    assert all("校友" not in item.name for item in synthetic)

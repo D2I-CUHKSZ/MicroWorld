@@ -8,6 +8,7 @@ This module adds two pieces that materially improve simulation realism:
 
 from __future__ import annotations
 
+import logging
 import re
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
@@ -15,6 +16,8 @@ from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 from uuid import uuid4
 
 from lightworld.graph.zep_entity_reader import EntityNode
+from lightworld.infrastructure.llm_client import LLMClient
+from lightworld.infrastructure.llm_client_factory import LLMClientFactory
 
 
 _PERSONAL_TYPES = {
@@ -60,6 +63,29 @@ _GENERIC_PERSON_NAMES = {
     "老师",  # Chinese: teacher
 }
 
+_TOPIC_HINT_STOPWORDS = {
+    "事件相关",
+    "相关事项",
+    "相关实体",
+    "舆情事件",
+    "公共事件",
+    "普通用户",
+}
+
+_TOPIC_HINT_BAD_PREFIXES = (
+    "的",
+    "与",
+    "和",
+    "及",
+    "或",
+    "对",
+    "把",
+    "将",
+    "被",
+)
+
+logger = logging.getLogger(__name__)
+
 
 @dataclass
 class PopulationPreparationResult:
@@ -88,6 +114,19 @@ class PopulationPreparationResult:
 
 class SimulationPopulationBuilder:
     """Prepare simulation population from graph entities."""
+
+    def __init__(
+        self,
+        llm_client: Optional[LLMClient] = None,
+        use_llm_topic_hints: bool = True,
+    ) -> None:
+        self.llm_client: Optional[LLMClient] = llm_client
+        if self.llm_client is None and use_llm_topic_hints:
+            try:
+                self.llm_client = LLMClientFactory.get_shared_client()
+            except Exception as exc:
+                logger.info("LLM topic hint extraction disabled, falling back to regex: %s", exc)
+                self.llm_client = None
 
     def prepare(
         self,
@@ -383,30 +422,111 @@ class SimulationPopulationBuilder:
             results.append(dict(item))
         return results
 
-    def _topic_hints(self, entities: List[EntityNode], simulation_requirement: str) -> List[str]:
+    def _clean_topic_hint(self, text: str) -> str:
+        cleaned = str(text or "").strip()
+        cleaned = re.sub(r"^[\s'\"“”‘’、，,；;:：()（）【】\\[\\]\\-]+", "", cleaned)
+        cleaned = re.sub(r"[\s'\"“”‘’、，,；;:：()（）【】\\[\\]\\-]+$", "", cleaned)
+        cleaned = re.sub(r"\s+", " ", cleaned)
+        if len(cleaned) < 2 or len(cleaned) > 20:
+            return ""
+        if cleaned in _TOPIC_HINT_STOPWORDS or cleaned in _GENERIC_PERSON_NAMES:
+            return ""
+        if any(cleaned.startswith(prefix) for prefix in _TOPIC_HINT_BAD_PREFIXES):
+            return ""
+        if cleaned.endswith(("之一", "相关", "内容", "事情", "信息")) and len(cleaned) <= 6:
+            return ""
+        if cleaned in {"最新进展", "平台热帖", "时间线更新", "来源", "细节"}:
+            return ""
+        return cleaned
+
+    def _normalize_topic_hints(self, topics: Iterable[str], max_items: int = 6) -> List[str]:
+        deduped: List[str] = []
+        seen = set()
+        for item in topics:
+            cleaned = self._clean_topic_hint(item)
+            lowered = cleaned.lower()
+            if not cleaned or lowered in seen:
+                continue
+            seen.add(lowered)
+            deduped.append(cleaned)
+            if len(deduped) >= max_items:
+                break
+        return deduped or ["public discussion", "fact-checking", "impact assessment"]
+
+    def _topic_hints_with_llm(self, entities: List[EntityNode], simulation_requirement: str) -> List[str]:
+        if self.llm_client is None:
+            return []
+
+        entity_lines: List[str] = []
+        for entity in entities[:18]:
+            summary = re.sub(r"\s+", " ", str(entity.summary or "")).strip()[:140]
+            entity_lines.append(f"- {entity.name}: {summary}")
+        prompt = (
+            "请从下面事件需求和实体信息中，提炼 4 到 6 个适合普通用户画像使用的主题短语。\n"
+            "要求：\n"
+            "1. 必须是完整、自然、可直接放入句子的名词短语，输出语言尽量与输入一致。\n"
+            "2. 不要输出残缺短语，不要以“的/与/和/及”等虚词开头。\n"
+            "3. 优先提炼事件核心议题，而不是人名碎片。\n"
+            "4. 避免空泛词，如“相关内容”“最新进展”“平台热帖”。\n"
+            "5. 输出 JSON，格式为 {\"topics\": [\"短语1\", \"短语2\"]}。\n\n"
+            f"事件需求：{simulation_requirement or '无'}\n\n"
+            "实体样本：\n"
+            + "\n".join(entity_lines)
+        )
+        response = self.llm_client.chat_json(
+            messages=[
+                {
+                    "role": "system",
+                    "content": "你负责为社交模拟生成高质量主题短语，只输出合法 JSON。",
+                },
+                {
+                    "role": "user",
+                    "content": prompt,
+                },
+            ],
+            temperature=0.1,
+            max_tokens=300,
+        )
+        return self._normalize_topic_hints(response.get("topics", []) or [])
+
+    def _topic_hints_regex(self, entities: List[EntityNode], simulation_requirement: str) -> List[str]:
         counter: Counter[str] = Counter()
         for entity in entities:
             for token in re.findall(r"[\u4e00-\u9fff]{2,8}", f"{entity.name} {entity.summary or ''}"):
-                if token in {"武汉大学", "学生", "事件相关", "相关事项", "相关实体"}:  # generic stopwords
+                cleaned = self._clean_topic_hint(token)
+                if not cleaned:
                     continue
-                counter[token] += 1
+                counter[cleaned] += 1
         for token in re.findall(r"[\u4e00-\u9fff]{2,8}", simulation_requirement or ""):
-            counter[token] += 2
-        topics = [token for token, _ in counter.most_common(8)]
-        return topics[:6] or ["procedural justice", "campus public opinion", "fact-checking"]
+            cleaned = self._clean_topic_hint(token)
+            if not cleaned:
+                continue
+            counter[cleaned] += 2
+        topics = [token for token, _ in counter.most_common(10)]
+        return self._normalize_topic_hints(topics)
+
+    def _topic_hints(self, entities: List[EntityNode], simulation_requirement: str) -> List[str]:
+        if self.llm_client is not None:
+            try:
+                topics = self._topic_hints_with_llm(entities, simulation_requirement)
+                if topics:
+                    return topics
+            except Exception as exc:
+                logger.warning("LLM topic hint extraction failed, falling back to regex: %s", exc)
+        return self._topic_hints_regex(entities, simulation_requirement)
 
     def _ordinary_archetypes(self, topic_hints: List[str]) -> List[Dict[str, Any]]:
-        primary = topic_hints[0] if topic_hints else "campus public opinion"
-        secondary = topic_hints[1] if len(topic_hints) > 1 else "procedural justice"
-        tertiary = topic_hints[2] if len(topic_hints) > 2 else "fact-checking"
+        primary = topic_hints[0] if topic_hints else "public discussion"
+        secondary = topic_hints[1] if len(topic_hints) > 1 else "fact-checking"
+        tertiary = topic_hints[2] if len(topic_hints) > 2 else "impact assessment"
         return [
             {
-                "name_prefix": "Observer_Student",
-                "label": "Student",
-                "segment": "campus_observer",
-                "summary": f"Ordinary campus student, follows {primary} and {secondary}, easily influenced by peer discussions and trending posts, posts short comments and follows up for verification.",
+                "name_prefix": "Observer_User",
+                "label": "Person",
+                "segment": "progress_watcher",
+                "summary": f"Ordinary observer user, follows the latest updates on {primary} and {secondary}, and is easily pulled into discussion by timeline updates and trending posts.",
                 "stance": "uncertain",
-                "topics": [primary, secondary, "campus discussion"],
+                "topics": [primary, secondary, "progress updates"],
             },
             {
                 "name_prefix": "FactChecker_User",
@@ -425,20 +545,20 @@ class SimulationPopulationBuilder:
                 "topics": [primary, "emotional expression", "taking sides"],
             },
             {
-                "name_prefix": "Alumni_Observer",
+                "name_prefix": "Domain_Observer",
                 "label": "Person",
-                "segment": "alumni_like",
-                "summary": f"Alumni-type user, concerned about school reputation, {secondary} and institutional reform, tends to offer constructive suggestions.",
+                "segment": "domain_observer",
+                "summary": f"Ordinary domain observer, focuses on the mechanisms and longer-term effects behind {primary}, and tends to offer structured and constructive analysis.",
                 "stance": "constructive",
-                "topics": ["school reputation", secondary, "institutional reform"],
+                "topics": [primary, tertiary, "long-term impact"],
             },
             {
-                "name_prefix": "Parent_View_User",
+                "name_prefix": "Risk_Sensitive_User",
                 "label": "Person",
-                "segment": "parent_view",
-                "summary": f"Parent-type user, cares about student safety, {primary} and how the school handles things, dislikes cyberbullying and uncontrolled public opinion.",
+                "segment": "risk_sensitive",
+                "summary": f"Ordinary risk-sensitive user, cares about {tertiary}, possible spillover effects, and distorted platform narratives, and dislikes uncontrolled amplification.",
                 "stance": "protective",
-                "topics": ["student safety", primary, "anti-cyberbullying"],
+                "topics": [tertiary, primary, "risk spillover"],
             },
             {
                 "name_prefix": "Amplifier_User",
