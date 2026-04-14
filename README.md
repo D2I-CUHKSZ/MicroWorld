@@ -49,25 +49,14 @@ It is designed for scenarios where the question is not only "what does the model
 
 ## Repository Snapshot
 
-The public site currently presents one concrete case study from the repository: a Wuhan University reputation simulation experiment. These numbers are used as readable signals, not as benchmark claims.
+The public site now presents the LK-99 room-temperature-superconductor news cycle as the main public-facing example. It is easier to share safely than a campus dispute case, while still showing the full LightWorld pipeline:
 
-| Signal | Value |
-| --- | ---: |
-| Input characters processed | 20,833 |
-| Simulation entities | 31 |
-| Topology units compiled | 29 |
-| Total recorded actions | 564 |
-| Twitter actions | 292 |
-| Reddit actions | 272 |
-| Memory writes | 295 |
-| Example asymmetric influence | 0.129 vs 0.043 |
-
-<p align="center">
-  <img src="docs/assets/event/image_01.jpg" width="23%" alt="WHU event image 1" />
-  <img src="docs/assets/event/news_frame.jpg" width="23%" alt="WHU news frame" />
-  <img src="docs/assets/event/image_03.jpg" width="23%" alt="WHU event image 2" />
-  <img src="docs/assets/event/commentary_frame.jpg" width="23%" alt="WHU commentary frame" />
-</p>
+| Public-facing signal | What it means |
+| --- | --- |
+| Multi-modal input package | The example combines long-form text and multiple videos. |
+| Cross-platform simulation | The same event is staged as a Twitter/Reddit-style discussion flow. |
+| Readable narrative arc | The run moves from hype and speculation to verification and disillusion. |
+| Inspectable artifacts | Reviewers can still inspect prompts, configs, topology traces, and reports. |
 
 ## System Architecture
 
@@ -154,7 +143,7 @@ uv run lightworld-full-run \
 uv run lightworld-api
 
 # Build a local multimodal graph pipeline.
-uv run lightworld-local-pipeline --config configs/local_pipeline/whu_baike_event.json
+uv run lightworld-local-pipeline --config /abs/path/to/local_pipeline.json
 
 # Run a prepared simulation config.
 uv run lightworld-parallel-sim --config /abs/path/to/simulation_config.json
@@ -219,7 +208,7 @@ LightWorld is currently best understood as a repository-backed research and prot
 | --- | --- |
 | Static GitHub Pages project site | Hosted public interactive backend |
 | Backend API and CLI entry points | Fully managed cloud deployment |
-| Multimodal WHU demo inputs | General-purpose benchmark suite |
+| Multimodal LK-99 demo inputs | General-purpose benchmark suite |
 | End-to-end local full-run service | Polished browser upload-and-run product |
 | Experiment artifacts and summaries | Public video walkthrough |
 

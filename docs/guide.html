@@ -99,13 +99,14 @@ uv run lightworld-api</code>
             <div class="step-number">5</div>
             <h3>Run the included sample workflow</h3>
             <p>
-              The repository already contains a multimodal example package for
-              the Wuhan University case.
+              The public site uses the LK-99 science-news cycle as its showcase
+              example. In practice, a full run is launched from a reusable full-run
+              config that points to your chosen input package.
             </p>
             <div class="code-block">
               <code>cd backend
 uv run lightworld-full-run \
-  --config ../multimodal_inputs/baike_wuda_event/full_run.config.json</code>
+  --config /abs/path/to/full_run.config.json</code>
             </div>
           </article>
         </div>

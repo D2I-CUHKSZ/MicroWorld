@@ -81,9 +81,9 @@
               <p>Text, images, videos, and graph context enter the same workflow.</p>
             </article>
             <article class="status-card">
-              <span class="status-label">Scheduling Unit</span>
-              <strong>29</strong>
-              <p>Representative topology units were compiled in the WHU experiment.</p>
+              <span class="status-label">Public Example</span>
+              <strong>LK-99</strong>
+              <p>A science-news example is used on the public site instead of a higher-risk campus dispute.</p>
             </article>
             <article class="status-card">
               <span class="status-label">Memory Mode</span>
@@ -92,8 +92,8 @@
             </article>
             <article class="status-card">
               <span class="status-label">Influence Model</span>
-              <strong>Directed PPR</strong>
-              <p>Influence is estimated asymmetrically rather than by symmetric links.</p>
+              <strong>Directional</strong>
+              <p>The runtime models who tends to shape discussion and who mostly reacts.</p>
             </article>
           </div>
         </div>
@@ -176,10 +176,11 @@
               </p>
             </article>
             <article class="feature-card">
-              <h3>PPR-driven asymmetry</h3>
+              <h3>Directional influence reading</h3>
               <p>
-                Personalized PageRank is used to estimate directed influence rather
-                than assuming balanced pairwise effects.
+                The runtime estimates influence direction instead of assuming
+                balanced pairwise effects, so public-facing outputs can explain
+                who tends to lead and who tends to follow.
               </p>
             </article>
           </div>
@@ -207,6 +208,171 @@
                 <span>Practicality</span>
                 <strong>surface artifacts that can be inspected outside the runtime</strong>
               </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-alt reveal">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-label">Model Diagrams</div>
+          <h2 class="section-title">Front-end diagrams for explaining the whole project</h2>
+          <p class="section-desc">
+            These views are designed as presentation-grade model diagrams: each
+            one explains a different question, so the architecture page can show
+            the whole system without collapsing everything into one unreadable figure.
+          </p>
+        </div>
+
+        <div class="diagram-grid">
+          <article class="signal-board diagram-panel diagram-panel-wide">
+            <div class="board-topline">
+              <span class="board-tag">System Overview</span>
+              <span class="board-tag">Big Picture</span>
+            </div>
+            <h3 class="board-title">From raw event material to inspectable simulation evidence</h3>
+            <p class="board-desc">
+              This is the one-slide explanation of LightWorld. If someone only
+              has thirty seconds, this should be the diagram they see first.
+            </p>
+            <div class="diagram-flow">
+              <article class="diagram-node">
+                <span class="diagram-node-label">Inputs</span>
+                <strong>Text, image, video, source pages</strong>
+                <p>Example inputs and user event material.</p>
+              </article>
+              <div class="diagram-arrow">parse</div>
+              <article class="diagram-node">
+                <span class="diagram-node-label">Ingestion</span>
+                <strong>Normalize multi-modal context</strong>
+                <p>Extract text, fields, manifests, and media references.</p>
+              </article>
+              <div class="diagram-arrow">compile</div>
+              <article class="diagram-node">
+                <span class="diagram-node-label">Graph Build</span>
+                <strong>Ontology, entities, relations</strong>
+                <p>Compile graph-aware context and stable graph IDs.</p>
+              </article>
+              <div class="diagram-arrow">prepare</div>
+              <article class="diagram-node">
+                <span class="diagram-node-label">Simulation</span>
+                <strong>Profiles, topology, platform runtime</strong>
+                <p>Build profiles and run topology-aware platform interactions.</p>
+              </article>
+              <div class="diagram-arrow">inspect</div>
+              <article class="diagram-node">
+                <span class="diagram-node-label">Artifacts</span>
+                <strong>Memory traces, logs, reports</strong>
+                <p>Expose summaries, action traces, topology evidence, and reports.</p>
+              </article>
+            </div>
+          </article>
+
+          <article class="signal-board diagram-panel">
+            <div class="board-topline">
+              <span class="board-tag">Codebase Layers</span>
+            </div>
+            <h3 class="board-title">How the repository modules line up</h3>
+            <div class="diagram-layer-stack">
+              <div class="diagram-layer">
+                <span class="diagram-layer-kicker">Entry</span>
+                <strong>cli / api</strong>
+                <p>Commands and HTTP routes that trigger the system.</p>
+              </div>
+              <div class="diagram-layer">
+                <span class="diagram-layer-kicker">Orchestration</span>
+                <strong>application</strong>
+                <p>End-to-end services that stitch the pipeline together.</p>
+              </div>
+              <div class="diagram-layer">
+                <span class="diagram-layer-kicker">Core Engines</span>
+                <strong>ingestion · graph · simulation · reporting</strong>
+                <p>The main modules that parse material, build graph context, run interactions, and summarize results.</p>
+              </div>
+              <div class="diagram-layer">
+                <span class="diagram-layer-kicker">Support</span>
+                <strong>storage · config · infrastructure · telemetry</strong>
+                <p>Persistence, runtime configuration, model access, retries, and logging.</p>
+              </div>
+            </div>
+          </article>
+
+          <article class="signal-board diagram-panel">
+            <div class="board-topline">
+              <span class="board-tag">Full-Run Sequence</span>
+            </div>
+            <h3 class="board-title">What one end-to-end run actually does</h3>
+            <div class="diagram-sequence">
+              <div class="sequence-step">
+                <span class="sequence-index">01</span>
+                <div>
+                  <strong>Load config and files</strong>
+                  <p>`lightworld-full-run` resolves input files and runtime options.</p>
+                </div>
+              </div>
+              <div class="sequence-step">
+                <span class="sequence-index">02</span>
+                <div>
+                  <strong>Build project context</strong>
+                  <p>Ingestion generates extracted text, content manifests, and project state.</p>
+                </div>
+              </div>
+              <div class="sequence-step">
+                <span class="sequence-index">03</span>
+                <div>
+                  <strong>Compile graph artifacts</strong>
+                  <p>Ontology, entities, graph snapshots, and relation signals are created.</p>
+                </div>
+              </div>
+              <div class="sequence-step">
+                <span class="sequence-index">04</span>
+                <div>
+                  <strong>Prepare simulation runtime</strong>
+                  <p>Profiles, prompts, social graph, topology units, and simulation config are emitted.</p>
+                </div>
+              </div>
+              <div class="sequence-step">
+                <span class="sequence-index">05</span>
+                <div>
+                  <strong>Run platforms and collect evidence</strong>
+                  <p>Platform actions, memory writes, and optional report outputs are recorded for inspection.</p>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="signal-board diagram-panel diagram-panel-wide">
+            <div class="board-topline">
+              <span class="board-tag">Deployment Boundary</span>
+              <span class="board-tag">What Runs Where</span>
+            </div>
+            <h3 class="board-title">Static front end and active backend are intentionally separate</h3>
+            <div class="deployment-map">
+              <article class="deployment-node">
+                <span class="diagram-layer-kicker">Public Surface</span>
+                <strong>GitHub Pages front end</strong>
+                <p>Hosts the project story, architecture diagrams, guide, and example pages.</p>
+                <div class="command-chip-row">
+                  <span class="command-chip">index.html</span>
+                  <span class="command-chip">architecture.html</span>
+                  <span class="command-chip">examples.html</span>
+                </div>
+              </article>
+              <div class="deployment-divider">
+                <span>runtime boundary</span>
+              </div>
+              <article class="deployment-node">
+                <span class="diagram-layer-kicker">Execution Surface</span>
+                <strong>Python backend and simulation runtime</strong>
+                <p>Runs locally or on separate infrastructure for ingestion, graph build, simulation, and reporting.</p>
+                <div class="command-chip-row">
+                  <span class="command-chip">lightworld-api</span>
+                  <span class="command-chip">lightworld-local-pipeline</span>
+                  <span class="command-chip">lightworld-full-run</span>
+                </div>
+              </article>
             </div>
           </article>
         </div>
@@ -296,11 +462,11 @@ uv run lightworld-full-run --config /abs/path/to/full_run.config.json</code>
           </article>
           <article class="feature-card">
             <h3>topology snapshots</h3>
-            <p>Unit structure, PPR centrality, and asymmetric influence traces.</p>
+            <p>Unit structure and influence traces that help explain how discussion clusters form and shift.</p>
           </article>
           <article class="feature-card">
             <h3>experiment_summary.json</h3>
-            <p>Readable summary of the end-to-end WHU scaled experiment.</p>
+            <p>Readable summary of the end-to-end public example run.</p>
           </article>
         </div>
       </div>
