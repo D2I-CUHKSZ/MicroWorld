@@ -26,6 +26,11 @@ runs/
 tmp/*
 !tmp/.gitkeep
 
+# Legacy or non-public example materials
+data/examples/whu_baike_event/
+multimodal_inputs/baike_wuda_event/
+examples/whu_baike_event/
+
 # Local databases
 *.db
 

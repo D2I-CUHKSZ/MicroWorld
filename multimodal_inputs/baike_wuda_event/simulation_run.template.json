@@ -1,7 +1,0 @@
-{
-  "simulation_id": "sim_xxx",
-  "platform": "parallel",
-  "max_rounds": 12,
-  "enable_graph_memory_update": false,
-  "force": false
-}

@@ -49,7 +49,7 @@ It is designed for scenarios where the question is not only "what does the model
 
 ## Repository Snapshot
 
-The public site now presents the LK-99 room-temperature-superconductor news cycle as the main public-facing example. It is easier to share safely than a campus dispute case, while still showing the full LightWorld pipeline:
+The public site now presents the LK-99 room-temperature-superconductor news cycle as the main public-facing example while still showing the full LightWorld pipeline:
 
 | Public-facing signal | What it means |
 | --- | --- |
