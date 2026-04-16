@@ -1,6 +1,6 @@
 from PIL import Image
 
-from lightworld.ingestion.multimodal_ingestion import (
+from microworld.ingestion.multimodal_ingestion import (
     MultimodalIngestionService,
     _VideoSegmentPayload,
 )

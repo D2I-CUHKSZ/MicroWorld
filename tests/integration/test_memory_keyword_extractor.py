@@ -1,4 +1,4 @@
-from lightworld.simulation.memory_keywords import MemoryKeywordExtractor
+from microworld.simulation.memory_keywords import MemoryKeywordExtractor
 
 
 class DummyTopologyRuntime:

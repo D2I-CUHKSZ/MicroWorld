@@ -1,5 +1,5 @@
-from lightworld.tools.entity_prompt_extractor import EntityPromptExtractor
-from lightworld.graph.zep_entity_reader import EntityNode
+from microworld.tools.entity_prompt_extractor import EntityPromptExtractor
+from microworld.graph.zep_entity_reader import EntityNode
 
 
 def make_entity(**overrides) -> EntityNode:

@@ -3,7 +3,7 @@ import json
 import csv
 import tempfile
 
-from lightworld.simulation.oasis_profile_generator import OasisProfileGenerator, OasisAgentProfile
+from microworld.simulation.oasis_profile_generator import OasisProfileGenerator, OasisAgentProfile
 
 
 def test_profile_formats():

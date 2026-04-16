@@ -1,4 +1,4 @@
-from lightworld.simulation.simulation_config_generator import AgentActivityConfig, SimulationConfigGenerator
+from microworld.simulation.simulation_config_generator import AgentActivityConfig, SimulationConfigGenerator
 
 
 def test_parse_event_config_supports_comment_and_thread_events():

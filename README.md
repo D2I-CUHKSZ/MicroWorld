@@ -9,8 +9,8 @@
 [![Project Site](https://img.shields.io/badge/Project%20Site-GitHub%20Pages-0f766e?style=for-the-badge&logo=githubpages&logoColor=white)](https://d2i-cuhksz.github.io/LightWorld/)
 [![Python](https://img.shields.io/badge/Python-3.11%2B-2563eb?style=for-the-badge&logo=python&logoColor=white)](pyproject.toml)
 [![License](https://img.shields.io/badge/License-AGPL--3.0-111827?style=for-the-badge&logo=opensourceinitiative&logoColor=white)](LICENSE)
-[![Backend](https://img.shields.io/badge/Backend-Flask-16a34a?style=for-the-badge&logo=flask&logoColor=white)](src/lightworld/cli/api.py)
-[![Inputs](https://img.shields.io/badge/Inputs-Text%20%7C%20Image%20%7C%20Video%20%7C%20Graph-f97316?style=for-the-badge)](#what-lightworld-does)
+[![Backend](https://img.shields.io/badge/Backend-Flask-16a34a?style=for-the-badge&logo=flask&logoColor=white)](src/microworld/cli/api.py)
+[![Inputs](https://img.shields.io/badge/Inputs-Text%20%7C%20Image%20%7C%20Video%20%7C%20Graph-f97316?style=for-the-badge)](#what-microworld-does)
 
 [Project Site](https://d2i-cuhksz.github.io/LightWorld/) ·
 [Architecture](https://d2i-cuhksz.github.io/LightWorld/architecture.html) ·
@@ -116,6 +116,8 @@ git clone https://github.com/d2i-cuhksz/LightWorld.git
 cd LightWorld
 ```
 
+The GitHub repository path still uses `LightWorld` for now. The runtime package and CLI commands below have already been renamed to `MicroWorld` / `microworld`.
+
 ### 2. Install prerequisites
 
 Required:
@@ -168,7 +170,7 @@ uv sync
 This is optional if you only want to run the CLI pipeline locally.
 
 ```bash
-uv run lightworld-api
+uv run microworld-api
 ```
 
 By default, the Flask service reads `FLASK_HOST`, `FLASK_PORT`, and `FLASK_DEBUG` from the environment, with port `5001` as the default backend port.
@@ -178,7 +180,7 @@ By default, the Flask service reads `FLASK_HOST`, `FLASK_PORT`, and `FLASK_DEBUG
 The public repository ships a reusable template, but it does not bundle a public raw input package. Create your own config by copying the template and filling in your local files:
 
 ```bash
-cp configs/full_run/full_run.template.json /tmp/lightworld-run.json
+cp configs/full_run/full_run.template.json /tmp/microworld-run.json
 ```
 
 Minimal example:
@@ -212,15 +214,15 @@ You can also keep `files` empty and use `files_from` to point at a text file wit
 ### 7. Run the full pipeline
 
 ```bash
-uv run lightworld-full-run \
-  --config /abs/path/to/lightworld-run.json
+uv run microworld-full-run \
+  --config /abs/path/to/microworld-run.json
 ```
 
 If you want a non-interactive topology clustering choice, pass one of the supported cluster modes:
 
 ```bash
-uv run lightworld-full-run \
-  --config /abs/path/to/lightworld-run.json \
+uv run microworld-full-run \
+  --config /abs/path/to/microworld-run.json \
   --cluster-method threshold
 ```
 
@@ -236,16 +238,16 @@ output/reports/
 
 ```bash
 # Start the Flask backend.
-uv run lightworld-api
+uv run microworld-api
 
 # Build a local multimodal graph pipeline.
-uv run lightworld-local-pipeline --config /abs/path/to/local_pipeline.json
+uv run microworld-local-pipeline --config /abs/path/to/local_pipeline.json
 
 # Run a prepared simulation config.
-uv run lightworld-parallel-sim --config /abs/path/to/simulation_config.json
+uv run microworld-parallel-sim --config /abs/path/to/simulation_config.json
 
 # Run ingestion, preparation, simulation, and optional report generation.
-uv run lightworld-full-run --config /abs/path/to/lightworld-run.json
+uv run microworld-full-run --config /abs/path/to/microworld-run.json
 ```
 
 ## Repository Layout
@@ -254,7 +256,7 @@ uv run lightworld-full-run --config /abs/path/to/lightworld-run.json
 MicroWorld/
   pyproject.toml              # project metadata, dependencies, CLI entry points
   src/
-    lightworld/               # the main importable Python package
+    microworld/               # the main importable Python package
       api/                    # Flask HTTP routes (graph, simulation, report)
       application/            # end-to-end orchestration services
       cli/                    # CLI entry points (api, full_run, local_pipeline, parallel_sim)

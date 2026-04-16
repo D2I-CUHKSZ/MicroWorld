@@ -50,6 +50,11 @@
             <div class="code-block">
               <code>git clone https://github.com/d2i-cuhksz/LightWorld.git
 cd LightWorld</code>
+              <p>
+                The GitHub repository path still uses <code>LightWorld</code> for now,
+                while the runtime package and CLI have already moved to
+                <code>MicroWorld</code> / <code>microworld</code>.
+              </p>
             </div>
           </article>
 
@@ -94,7 +99,7 @@ MULTIMODAL_AUDIO_BASE_URL=</code>
               simulation, and report endpoints.
             </p>
             <div class="code-block">
-              <code>uv run lightworld-api</code>
+              <code>uv run microworld-api</code>
             </div>
           </article>
 
@@ -106,10 +111,10 @@ MULTIMODAL_AUDIO_BASE_URL=</code>
               files, and then run the full pipeline from the repository root.
             </p>
             <div class="code-block">
-              <code>cp configs/full_run/full_run.template.json /tmp/lightworld-run.json
+              <code>cp configs/full_run/full_run.template.json /tmp/microworld-run.json
 
-uv run lightworld-full-run \
-  --config /abs/path/to/lightworld-run.json</code>
+uv run microworld-full-run \
+  --config /abs/path/to/microworld-run.json</code>
             </div>
           </article>
         </div>
@@ -125,19 +130,19 @@ uv run lightworld-full-run \
         <div class="feature-grid">
           <article class="feature-card">
             <h3>API service</h3>
-            <div class="code-block"><code>uv run lightworld-api</code></div>
+            <div class="code-block"><code>uv run microworld-api</code></div>
           </article>
           <article class="feature-card">
             <h3>Local graph pipeline</h3>
-            <div class="code-block"><code>uv run lightworld-local-pipeline --config ...</code></div>
+            <div class="code-block"><code>uv run microworld-local-pipeline --config ...</code></div>
           </article>
           <article class="feature-card">
             <h3>Parallel simulation</h3>
-            <div class="code-block"><code>uv run lightworld-parallel-sim --config ...</code></div>
+            <div class="code-block"><code>uv run microworld-parallel-sim --config ...</code></div>
           </article>
           <article class="feature-card">
             <h3>Full run</h3>
-            <div class="code-block"><code>uv run lightworld-full-run --config ...</code></div>
+            <div class="code-block"><code>uv run microworld-full-run --config ...</code></div>
           </article>
         </div>
       </div>
@@ -164,7 +169,7 @@ uv run lightworld-full-run \
             <ul class="plain-list">
               <li>Read the architecture page for the full workflow</li>
               <li>Open the examples page to see the LK-99 demo</li>
-              <li>Run `lightworld-full-run` for the end-to-end pipeline</li>
+              <li>Run `microworld-full-run` for the end-to-end pipeline</li>
               <li>Inspect the generated report and simulation artifacts</li>
             </ul>
           </article>

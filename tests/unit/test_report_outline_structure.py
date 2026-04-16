@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from lightworld.reporting.report_agent import ReportAgent, ReportOutline, ReportSection
+from microworld.reporting.report_agent import ReportAgent, ReportOutline, ReportSection
 
 
 def test_normalize_outline_adds_history_and_forecast_sections():

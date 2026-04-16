@@ -44,10 +44,10 @@ dev = [
 ]
 
 [project.scripts]
-lightworld-api = "lightworld.cli.api:main"
-lightworld-local-pipeline = "lightworld.cli.local_pipeline:main"
-lightworld-parallel-sim = "lightworld.cli.parallel_simulation:main"
-lightworld-full-run = "lightworld.cli.full_run:main"
+microworld-api = "microworld.cli.api:main"
+microworld-local-pipeline = "microworld.cli.local_pipeline:main"
+microworld-parallel-sim = "microworld.cli.parallel_simulation:main"
+microworld-full-run = "microworld.cli.full_run:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -60,7 +60,7 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/lightworld"]
+packages = ["src/microworld"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

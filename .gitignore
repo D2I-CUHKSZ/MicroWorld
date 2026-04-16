@@ -1,6 +1,6 @@
 # Local secrets
 .env
-src/lightworld/config/settings_local.py
+src/microworld/config/settings_local.py
 
 # Python caches
 __pycache__/

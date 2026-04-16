@@ -1,5 +1,5 @@
-from lightworld.simulation.simulation_population import SimulationPopulationBuilder
-from lightworld.graph.zep_entity_reader import EntityNode
+from microworld.simulation.simulation_population import SimulationPopulationBuilder
+from microworld.graph.zep_entity_reader import EntityNode
 
 
 def make_entity(name: str, label: str, summary: str = "", attributes=None, related_nodes=None):

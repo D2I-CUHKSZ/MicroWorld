@@ -1,11 +1,9 @@
 {
-  "project_name": "My LightWorld Run",
-  "graph_name": "My LightWorld Graph",
+  "project_name": "My MicroWorld Run",
+  "graph_name": "My MicroWorld Graph",
   "simulation_requirement": "请围绕输入材料生成实体、关系与舆情传播结构，并完成双平台社交模拟。",
   "additional_context": "",
-  "files": [
-    "../../event_inputs/baike_wuda_event/event_overview.md"
-  ],
+  "files": [],
   "files_from": "",
   "pipeline": {
     "chunk_size": 500,
