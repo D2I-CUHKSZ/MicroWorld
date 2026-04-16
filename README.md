@@ -74,27 +74,9 @@ The public site now presents the LK-99 room-temperature-superconductor news cycl
 
 ## System Architecture
 
-```mermaid
-flowchart LR
-    A["Multi-modal inputs<br/>text / image / video"] --> B["Multimodal ingestion"]
-    B --> C["Graph build<br/>entities + relations"]
-    C --> D["Platform profiles"]
-    C --> E["Topic keywords"]
-
-    E --> F["Topology clustering"]
-    F --> F1["Threshold mode"]
-    F --> F2["LLM-keyword mode"]
-
-    D --> G["Topology-aware runtime"]
-    F1 --> G
-    F2 --> G
-    G --> H["PPR-guided influence"]
-    G --> I["Lightweight memory"]
-    H --> J["Twitter / Reddit simulation"]
-    I --> J
-
-    J --> K["Traceable outputs<br/>reports + logs + configs"]
-```
+<p align="center">
+  <img src="Architecture.png" width="100%" alt="MicroWorld system architecture" />
+</p>
 
 The simplified view is:
 
