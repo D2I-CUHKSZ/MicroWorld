@@ -76,19 +76,34 @@ The public site now presents the LK-99 room-temperature-superconductor news cycl
 
 ```mermaid
 flowchart LR
-    A["Inputs<br/>PDF / text / image / video"] --> B["Multimodal ingestion"]
-    B --> C["Ontology generation"]
-    C --> D["Zep semantic graph"]
-    D --> E["Entity prompts"]
-    D --> F["Social relation graph"]
-    E --> G["OASIS profiles"]
-    F --> H["Topology-aware runtime"]
-    G --> H
-    H --> I["Twitter / Reddit simulations"]
-    I --> J["Action logs and SimpleMem traces"]
-    J --> K["Report agent"]
-    K --> L["Experiment report"]
+    A["Multi-modal inputs<br/>text / image / video"] --> B["Multimodal ingestion"]
+    B --> C["Graph build<br/>entities + relations"]
+    C --> D["Platform profiles"]
+    C --> E["Topic keywords"]
+
+    E --> F["Topology clustering"]
+    F --> F1["Threshold mode"]
+    F --> F2["LLM-keyword mode"]
+
+    D --> G["Topology-aware runtime"]
+    F1 --> G
+    F2 --> G
+    G --> H["PPR-guided influence"]
+    G --> I["Lightweight memory"]
+    H --> J["Twitter / Reddit simulation"]
+    I --> J
+
+    J --> K["Traceable outputs<br/>reports + logs + configs"]
 ```
+
+The simplified view is:
+
+- `Multimodal ingestion` turns raw event materials into structured context.
+- `Graph build` produces the entities and relations used downstream.
+- `Topic keywords` feed directly into the clustering stage, especially the `LLM-keyword mode`.
+- `Topology clustering` currently supports two strategies: `threshold mode` and `LLM-keyword mode`.
+- `Topology-aware runtime` is guided by `PPR-based directional influence` and a `lightweight memory` module rather than a full-history replay design.
+- Final outputs keep both the high-level report and the detailed simulation artifacts.
 
 LightWorld keeps the static project site and the backend runtime deliberately separate. GitHub Pages hosts the project narrative, guide, architecture, and example pages; the Flask backend and long-running simulations must be run in a local or separately deployed runtime environment.
 
