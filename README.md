@@ -6,16 +6,16 @@
 
 **A lightweight multi-modal social simulation engine for public-event analysis, topology-aware runtime scheduling, memory-efficient execution, and report generation.**
 
-[![Project Site](https://img.shields.io/badge/Project%20Site-GitHub%20Pages-0f766e?style=for-the-badge&logo=githubpages&logoColor=white)](https://d2i-cuhksz.github.io/LightWorld/)
+[![Project Site](https://img.shields.io/badge/Project%20Site-GitHub%20Pages-0f766e?style=for-the-badge&logo=githubpages&logoColor=white)](https://d2i-cuhksz.github.io/MicroWorld/)
 [![Python](https://img.shields.io/badge/Python-3.11%2B-2563eb?style=for-the-badge&logo=python&logoColor=white)](pyproject.toml)
 [![License](https://img.shields.io/badge/License-AGPL--3.0-111827?style=for-the-badge&logo=opensourceinitiative&logoColor=white)](LICENSE)
 [![Backend](https://img.shields.io/badge/Backend-Flask-16a34a?style=for-the-badge&logo=flask&logoColor=white)](src/microworld/cli/api.py)
 [![Inputs](https://img.shields.io/badge/Inputs-Text%20%7C%20Image%20%7C%20Video%20%7C%20Graph-f97316?style=for-the-badge)](#what-microworld-does)
 
-[Project Site](https://d2i-cuhksz.github.io/LightWorld/) ·
-[Architecture](https://d2i-cuhksz.github.io/LightWorld/architecture.html) ·
-[User Guide](https://d2i-cuhksz.github.io/LightWorld/guide.html) ·
-[Examples](https://d2i-cuhksz.github.io/LightWorld/examples.html)
+[Project Site](https://d2i-cuhksz.github.io/MicroWorld/) ·
+[Architecture](https://d2i-cuhksz.github.io/MicroWorld/architecture.html) ·
+[User Guide](https://d2i-cuhksz.github.io/MicroWorld/guide.html) ·
+[Examples](https://d2i-cuhksz.github.io/MicroWorld/examples.html)
 
 </div>
 
@@ -112,11 +112,9 @@ MicroWorld keeps the static project site and the backend runtime deliberately se
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/d2i-cuhksz/LightWorld.git
-cd LightWorld
+git clone https://github.com/d2i-cuhksz/MicroWorld.git
+cd MicroWorld
 ```
-
-The GitHub repository path still uses `LightWorld` for now. The runtime package and CLI commands below have already been renamed to `MicroWorld` / `microworld`.
 
 ### 2. Install prerequisites
 
