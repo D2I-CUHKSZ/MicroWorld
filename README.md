@@ -101,7 +101,21 @@ git clone https://github.com/d2i-cuhksz/LightWorld.git
 cd LightWorld
 ```
 
-### 2. Configure secrets
+### 2. Install prerequisites
+
+Required:
+
+- Python 3.11+
+- `uv`
+
+Optional but recommended for video inputs:
+
+- `ffmpeg`
+- `ffprobe`
+
+If `ffmpeg` and `ffprobe` are not on your system `PATH`, set `MULTIMODAL_FFMPEG_PATH` and `MULTIMODAL_FFPROBE_PATH` in `.env`.
+
+### 3. Configure secrets
 
 ```bash
 cp .env.example .env
@@ -121,13 +135,22 @@ LLM_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
 LLM_MODEL_NAME=qwen-plus
 ```
 
-### 3. Install dependencies
+For multimodal audio transcription, the public defaults inherit the main LLM credentials unless you override them:
+
+```bash
+MULTIMODAL_AUDIO_API_KEY=
+MULTIMODAL_AUDIO_BASE_URL=
+```
+
+### 4. Install dependencies
 
 ```bash
 uv sync
 ```
 
-### 4. Start the API service
+### 5. Start the API service
+
+This is optional if you only want to run the CLI pipeline locally.
 
 ```bash
 uv run lightworld-api
@@ -135,19 +158,63 @@ uv run lightworld-api
 
 By default, the Flask service reads `FLASK_HOST`, `FLASK_PORT`, and `FLASK_DEBUG` from the environment, with port `5001` as the default backend port.
 
-### 5. Run the included end-to-end sample
+### 6. Create a full-run config
+
+The public repository ships a reusable template, but it does not bundle a public raw input package. Create your own config by copying the template and filling in your local files:
+
+```bash
+cp configs/full_run/full_run.template.json /tmp/lightworld-run.json
+```
+
+Minimal example:
+
+```json
+{
+  "project_name": "My LightWorld Run",
+  "graph_name": "My LightWorld Graph",
+  "simulation_requirement": "Build entities, relations, and a two-platform social simulation from the input materials.",
+  "files": [
+    "/abs/path/to/event.md",
+    "/abs/path/to/video.mp4"
+  ],
+  "pipeline": {
+    "chunk_size": 500,
+    "chunk_overlap": 50,
+    "batch_size": 3
+  },
+  "simulation": {
+    "enable_twitter": true,
+    "enable_reddit": true
+  },
+  "report": {
+    "generate": false
+  }
+}
+```
+
+You can also keep `files` empty and use `files_from` to point at a text file with one input path per line.
+
+### 7. Run the full pipeline
 
 ```bash
 uv run lightworld-full-run \
-  --config configs/full_run/full_run.template.json
+  --config /abs/path/to/lightworld-run.json
 ```
 
 If you want a non-interactive topology clustering choice, pass one of the supported cluster modes:
 
 ```bash
 uv run lightworld-full-run \
-  --config configs/full_run/full_run.template.json \
+  --config /abs/path/to/lightworld-run.json \
   --cluster-method threshold
+```
+
+Generated project data, simulation outputs, and reports are written under:
+
+```text
+data/generated/
+output/simulations/
+output/reports/
 ```
 
 ## Command Palette
@@ -163,7 +230,7 @@ uv run lightworld-local-pipeline --config /abs/path/to/local_pipeline.json
 uv run lightworld-parallel-sim --config /abs/path/to/simulation_config.json
 
 # Run ingestion, preparation, simulation, and optional report generation.
-uv run lightworld-full-run --config configs/full_run/full_run.template.json
+uv run lightworld-full-run --config /abs/path/to/lightworld-run.json
 ```
 
 ## Repository Layout
@@ -190,16 +257,12 @@ LightWorld/
   configs/                    # reusable configuration templates
     full_run/                 # full pipeline run configs
     simulation/               # simulation-specific configs
-    local_pipeline/           # local graph pipeline configs
   data/
-    examples/                 # checked-in demo input data
     generated/                # runtime-generated data (gitignored)
   docs/                       # GitHub Pages project site
-  scripts/                    # developer utilities and data scripts
   tests/                      # unit and integration tests
     unit/
     integration/
-  examples/                   # example run instructions with README
 ```
 
 ## Generated Artifacts
@@ -222,9 +285,9 @@ LightWorld is currently best understood as a repository-backed research and prot
 | --- | --- |
 | Static GitHub Pages project site | Hosted public interactive backend |
 | Backend API and CLI entry points | Fully managed cloud deployment |
-| Multimodal LK-99 demo inputs | General-purpose benchmark suite |
+| Public LK-99 case-study pages | General-purpose benchmark suite |
 | End-to-end local full-run service | Polished browser upload-and-run product |
-| Experiment artifacts and summaries | Public video walkthrough |
+| Reusable config templates and inspectable output structure | Public video walkthrough |
 
 ## Development Notes
 

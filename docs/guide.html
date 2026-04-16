@@ -27,7 +27,7 @@
         <p class="subpage-desc">
           This page keeps the setup path short: clone the repository, configure
           the required environment variables, run the backend, and execute the
-          included sample configuration.
+          pipeline with your own local input package.
         </p>
       </div>
     </section>
@@ -48,7 +48,7 @@
             <h3>Clone the repository</h3>
             <p>Download the project and enter the repository root.</p>
             <div class="code-block">
-              <code>git clone git@github.com:d2i-cuhksz/LightWorld.git
+              <code>git clone https://github.com/d2i-cuhksz/LightWorld.git
 cd LightWorld</code>
             </div>
           </article>
@@ -60,12 +60,16 @@ cd LightWorld</code>
               The backend validates at least two required keys before startup.
             </p>
             <div class="code-block">
-              <code>LLM_API_KEY=your_key
+              <code>cp .env.example .env
+
+LLM_API_KEY=your_key
 ZEP_API_KEY=your_key
 
 # Optional
 LLM_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
-LLM_MODEL_NAME=qwen-plus</code>
+LLM_MODEL_NAME=qwen-plus
+MULTIMODAL_AUDIO_API_KEY=
+MULTIMODAL_AUDIO_BASE_URL=</code>
             </div>
           </article>
 
@@ -74,11 +78,11 @@ LLM_MODEL_NAME=qwen-plus</code>
             <h3>Install backend dependencies</h3>
             <p>
               The current repository expects dependency management through
-              <code>uv</code>.
+              <code>uv</code>. If you plan to ingest video inputs, make sure
+              <code>ffmpeg</code> and <code>ffprobe</code> are available too.
             </p>
             <div class="code-block">
-              <code>cd backend
-uv sync</code>
+              <code>uv sync</code>
             </div>
           </article>
 
@@ -90,23 +94,22 @@ uv sync</code>
               simulation, and report endpoints.
             </p>
             <div class="code-block">
-              <code>cd backend
-uv run lightworld-api</code>
+              <code>uv run lightworld-api</code>
             </div>
           </article>
 
           <article class="step-card">
             <div class="step-number">5</div>
-            <h3>Run the included sample workflow</h3>
+            <h3>Create a run config and launch the workflow</h3>
             <p>
-              The public site uses the LK-99 science-news cycle as its showcase
-              example. In practice, a full run is launched from a reusable full-run
-              config that points to your chosen input package.
+              Start from the public template, point it to your own local input
+              files, and then run the full pipeline from the repository root.
             </p>
             <div class="code-block">
-              <code>cd backend
+              <code>cp configs/full_run/full_run.template.json /tmp/lightworld-run.json
+
 uv run lightworld-full-run \
-  --config /abs/path/to/full_run.config.json</code>
+  --config /abs/path/to/lightworld-run.json</code>
             </div>
           </article>
         </div>
@@ -151,8 +154,8 @@ uv run lightworld-full-run \
             <h3>What is already ready</h3>
             <ul class="plain-list">
               <li>Backend API skeleton and routes</li>
-              <li>Multimodal sample inputs</li>
-              <li>Experiment artifacts and summaries</li>
+              <li>Config templates for local runs</li>
+              <li>Generated simulation artifacts and reports</li>
               <li>Static GitHub Pages project site</li>
             </ul>
           </article>
