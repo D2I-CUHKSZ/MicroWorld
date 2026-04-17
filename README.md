@@ -17,7 +17,7 @@
 
 </div>
 
-### 🕵️‍♂️ Overview
+## 🕵️‍♂️ Overview
 
 **MicroWorld** starts from raw event material: 📄 documents, 🖼️ images, 🎥 videos, and 🕸️ graph-ready context. It builds an event graph, derives platform-facing agent profiles, runs a multi-agent discussion process, and keeps the intermediate artifacts available for inspection after the run!
 
