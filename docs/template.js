@@ -33,6 +33,7 @@
       <nav>
         <div class="nav-inner">
           <a href="index.html" class="nav-brand" aria-label="MicroWorld home">
+            <span class="nav-brand-mark" aria-hidden="true">🌐</span>
             <span class="nav-brand-text">MicroWorld</span>
           </a>
           <ul class="nav-links">
@@ -52,7 +53,7 @@
     footer.outerHTML = `
       <footer>
         <div class="footer-inner">
-          <div class="footer-brand">MicroWorld</div>
+          <div class="footer-brand"><span aria-hidden="true">✨</span> MicroWorld</div>
           <p class="footer-desc">
             A lightweight multi-modal social simulation engine for event analysis,
             topology-aware runtime scheduling, memory-efficient execution, and
@@ -60,8 +61,8 @@
           </p>
           <hr class="footer-divider" />
           <div class="footer-bottom">
-            <p>GitHub Pages project site for the MicroWorld repository.</p>
-            <p>2026 MicroWorld Project</p>
+            <p><span aria-hidden="true">📄</span> GitHub Pages project site for the MicroWorld repository.</p>
+            <p><span aria-hidden="true">💫</span> 2026 MicroWorld Project</p>
           </div>
         </div>
       </footer>
