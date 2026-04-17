@@ -1,0 +1,76 @@
+{
+  "token_savings": {
+    "source": "Table 2: Token Savings Across Frameworks",
+    "entries": [
+      {
+        "label": "ECS-50",
+        "framework": "ECS",
+        "scale": 50,
+        "base_tokens": 320235,
+        "co_tokens": 185556,
+        "token_save_pct": 43.0
+      },
+      {
+        "label": "FDE-LLM",
+        "framework": "FDE-LLM",
+        "scale": 206,
+        "base_tokens": 286533,
+        "co_tokens": 136736,
+        "token_save_pct": 52.23
+      },
+      {
+        "label": "ECS-500",
+        "framework": "ECS",
+        "scale": 500,
+        "base_tokens": 3281979,
+        "co_tokens": 743775,
+        "token_save_pct": 77.3
+      },
+      {
+        "label": "OASIS",
+        "framework": "OASIS",
+        "scale": 196,
+        "base_tokens": 4526566,
+        "co_tokens": 376677,
+        "token_save_pct": 91.7
+      }
+    ]
+  },
+  "ppr_similarity": {
+    "source": "Figure 7(b): Ablation Study of Coordination and Role Differentiation",
+    "metric": "Mean trajectory similarity to ground truth over 13 iteration days",
+    "note": "Values below are digitized from the plotted series in the paper figure and then averaged.",
+    "series": {
+      "Baseline": [
+        0.98,
+        0.9,
+        0.94,
+        0.98,
+        0.95,
+        0.9,
+        0.78,
+        0.71,
+        0.58,
+        0.92,
+        0.84,
+        0.62,
+        0.62
+      ],
+      "PPR-guided RD": [
+        1.0,
+        0.89,
+        0.93,
+        0.97,
+        0.93,
+        0.92,
+        0.92,
+        0.96,
+        0.92,
+        0.93,
+        0.95,
+        0.89,
+        0.89
+      ]
+    }
+  }
+}

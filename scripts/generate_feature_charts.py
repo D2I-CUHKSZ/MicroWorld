@@ -1,0 +1,204 @@
+from __future__ import annotations
+
+import json
+import os
+from pathlib import Path
+
+import matplotlib.pyplot as plt
+from matplotlib.ticker import FuncFormatter
+from matplotlib import patheffects as pe
+
+
+ROOT = Path(__file__).resolve().parent.parent
+ASSET_DIR = ROOT / "docs" / "assets"
+DATA_PATH = ASSET_DIR / "feature_chart_data.json"
+
+
+COLORS = {
+    "navy": "#0f172a",
+    "slate": "#475569",
+    "grid": "#dbe4ee",
+    "blue": "#2563eb",
+    "blue_soft": "#93c5fd",
+    "teal": "#0f766e",
+    "teal_soft": "#99f6e4",
+    "ink": "#111827",
+    "white": "#ffffff",
+    "bg": "#f8fbff",
+}
+
+
+def load_data() -> dict:
+    return json.loads(DATA_PATH.read_text(encoding="utf-8"))
+
+
+def format_tokens(value: int) -> str:
+    if value >= 1_000_000:
+        return f"{value / 1_000_000:.2f}M"
+    if value >= 1_000:
+        return f"{value / 1_000:.1f}K"
+    return str(value)
+
+
+def base_figure():
+    fig, ax = plt.subplots(figsize=(12, 5.8), dpi=200)
+    fig.patch.set_facecolor(COLORS["white"])
+    ax.set_facecolor(COLORS["bg"])
+    for spine in ax.spines.values():
+        spine.set_visible(False)
+    ax.grid(axis="x", color=COLORS["grid"], linewidth=1)
+    ax.set_axisbelow(True)
+    return fig, ax
+
+
+def save_token_chart(data: dict) -> None:
+    entries = sorted(
+        data["token_savings"]["entries"],
+        key=lambda item: item["token_save_pct"],
+        reverse=True,
+    )
+
+    labels = [item["label"] for item in entries]
+    values = [item["token_save_pct"] for item in entries]
+    details = [
+        f"{format_tokens(item['base_tokens'])} -> {format_tokens(item['co_tokens'])}"
+        for item in entries
+    ]
+
+    fig, ax = base_figure()
+    bars = ax.barh(labels, values, color=COLORS["teal"], height=0.58)
+    ax.invert_yaxis()
+    ax.set_xlim(0, 100)
+    ax.set_xlabel("Token reduction (%)", fontsize=12, color=COLORS["slate"])
+    ax.tick_params(axis="x", labelsize=11, colors=COLORS["slate"])
+    ax.tick_params(axis="y", labelsize=12, colors=COLORS["ink"], length=0)
+
+    for bar, value, detail in zip(bars, values, details):
+        y = bar.get_y() + bar.get_height() / 2
+        ax.text(
+            value + 1.2,
+            y,
+            f"{value:.2f}%",
+            va="center",
+            ha="left",
+            fontsize=12,
+            color=COLORS["navy"],
+            fontweight="bold",
+        )
+        ax.text(
+            max(value - 1.2, 2),
+            y,
+            detail,
+            va="center",
+            ha="right",
+            fontsize=10.5,
+            color=COLORS["white"],
+            path_effects=[pe.withStroke(linewidth=0)],
+        )
+
+    fig.text(
+        0.06,
+        0.94,
+        "Cluster-based Coordination Reduces Token Usage",
+        fontsize=22,
+        fontweight="bold",
+        color=COLORS["navy"],
+    )
+    fig.text(
+        0.06,
+        0.89,
+        "The topology-aware cluster update strategy removes redundant inference and scales better on larger workloads.",
+        fontsize=11.5,
+        color=COLORS["slate"],
+    )
+
+    out = ASSET_DIR / "feature_token_savings_bar.png"
+    fig.tight_layout(rect=(0.03, 0.06, 0.98, 0.86))
+    fig.savefig(out, dpi=200, bbox_inches="tight")
+    plt.close(fig)
+
+
+def save_similarity_chart(data: dict) -> None:
+    series = data["ppr_similarity"]["series"]
+    mean_values = {
+        name: sum(values) / len(values)
+        for name, values in series.items()
+    }
+    ordered = [
+        ("PPR-guided influence", "PPR-guided RD"),
+        ("Baseline influence", "Baseline"),
+    ]
+    labels = [label for label, _ in ordered]
+    values = [mean_values[key] for _, key in ordered]
+    baseline_floor = 0.5
+    widths = [value - baseline_floor for value in values]
+
+    fig, ax = base_figure()
+    bars = ax.barh(
+        labels,
+        widths,
+        color=[COLORS["blue"], COLORS["blue_soft"]],
+        height=0.58,
+        left=baseline_floor,
+    )
+    ax.invert_yaxis()
+    ax.set_xlim(baseline_floor, 1.0)
+    ax.xaxis.set_major_formatter(FuncFormatter(lambda x, _: f"{x * 100:.0f}%"))
+    ax.set_xlabel("Mean alignment to reference trajectory (%)", fontsize=12, color=COLORS["slate"])
+    ax.tick_params(axis="x", labelsize=11, colors=COLORS["slate"])
+    ax.tick_params(axis="y", labelsize=12, colors=COLORS["ink"], length=0)
+
+    for bar, value in zip(bars, values):
+        y = bar.get_y() + bar.get_height() / 2
+        end_x = bar.get_x() + bar.get_width()
+        ax.text(
+            min(end_x + 0.01, 0.995),
+            y,
+            f"{value * 100:.1f}%",
+            va="center",
+            ha="left",
+            fontsize=12,
+            color=COLORS["navy"],
+            fontweight="bold",
+        )
+
+    delta = mean_values["PPR-guided RD"] - mean_values["Baseline"]
+    fig.text(
+        0.06,
+        0.94,
+        "PPR-guided Influence Improves Simulation Accuracy",
+        fontsize=22,
+        fontweight="bold",
+        color=COLORS["navy"],
+    )
+    fig.text(
+        0.06,
+        0.89,
+        "With topology-aware influence weighting, the simulated trajectory stays closer to the reference trend over time.",
+        fontsize=11.5,
+        color=COLORS["slate"],
+    )
+    fig.text(
+        0.06,
+        0.83,
+        f"Improvement over baseline: +{delta * 100:.1f} percentage points",
+        fontsize=12,
+        color=COLORS["blue"],
+        fontweight="bold",
+    )
+
+    out = ASSET_DIR / "feature_ppr_similarity_bar.png"
+    fig.tight_layout(rect=(0.03, 0.06, 0.98, 0.8))
+    fig.savefig(out, dpi=200, bbox_inches="tight")
+    plt.close(fig)
+
+
+def main() -> None:
+    os.environ.setdefault("MPLCONFIGDIR", "/tmp/matplotlib")
+    data = load_data()
+    save_token_chart(data)
+    save_similarity_chart(data)
+
+
+if __name__ == "__main__":
+    main()
