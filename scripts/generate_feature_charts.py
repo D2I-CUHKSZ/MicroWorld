@@ -16,8 +16,8 @@ DATA_PATH = ASSET_DIR / "feature_chart_data.json"
 
 COLORS = {
     "navy": "#0f172a",
-    "slate": "#475569",
-    "grid": "#d7e3f4",
+    "slate": "#334155",
+    "grid": "#c7d7ec",
     "blue": "#2563eb",
     "blue_soft": "#93c5fd",
     "orange": "#f97316",
@@ -76,8 +76,8 @@ def save_token_chart(data: dict) -> None:
     bars = ax.barh(labels, values, color=bar_colors, height=0.66)
     ax.invert_yaxis()
     ax.set_xlim(0, 100)
-    ax.set_xlabel("Token reduction (%)", fontsize=14, color=COLORS["slate"], labelpad=8)
-    ax.tick_params(axis="x", labelsize=12, colors=COLORS["slate"])
+    ax.set_xlabel("Token reduction (%)", fontsize=16, color=COLORS["navy"], labelpad=10, fontweight="bold")
+    ax.tick_params(axis="x", labelsize=13, colors=COLORS["navy"])
     ax.tick_params(axis="y", labelsize=16, colors=COLORS["ink"], length=0)
 
     for bar, value, detail in zip(bars, values, details):
@@ -88,7 +88,7 @@ def save_token_chart(data: dict) -> None:
             f"{value:.2f}%",
             va="center",
             ha="left",
-            fontsize=14,
+            fontsize=15,
             color=COLORS["navy"],
             fontweight="bold",
         )
@@ -136,8 +136,14 @@ def save_similarity_chart(data: dict) -> None:
     ax.invert_yaxis()
     ax.set_xlim(baseline_floor, 1.0)
     ax.xaxis.set_major_formatter(FuncFormatter(lambda x, _: f"{x * 100:.0f}%"))
-    ax.set_xlabel("Mean alignment to reference trajectory (%)", fontsize=14, color=COLORS["slate"], labelpad=8)
-    ax.tick_params(axis="x", labelsize=12, colors=COLORS["slate"])
+    ax.set_xlabel(
+        "Mean alignment to reference trajectory (%)",
+        fontsize=16,
+        color=COLORS["navy"],
+        labelpad=10,
+        fontweight="bold",
+    )
+    ax.tick_params(axis="x", labelsize=13, colors=COLORS["navy"])
     ax.tick_params(axis="y", labelsize=16, colors=COLORS["ink"], length=0)
 
     for bar, value in zip(bars, values):
