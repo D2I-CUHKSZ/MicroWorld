@@ -161,13 +161,13 @@ nav {
   font-weight: 700;
   color: var(--text);
   flex-shrink: 0;
+  letter-spacing: -0.03em;
 }
 
-.nav-logo-image {
-  display: block;
-  width: 172px;
-  height: auto;
-  filter: drop-shadow(0 6px 18px rgba(34, 197, 94, 0.16));
+.nav-brand-text {
+  font-size: 1.08rem;
+  font-weight: 800;
+  color: var(--text);
 }
 
 .nav-links {
@@ -1976,10 +1976,6 @@ footer {
     height: auto;
     padding: 14px 16px;
     flex-wrap: wrap;
-  }
-
-  .nav-logo-image {
-    width: 148px;
   }
 
   .nav-links {
