@@ -2,7 +2,7 @@
 
 <img src="LOGO.png" width="260" alt="MicroWorld logo" />
 
-### Multi-modal event analysis and social simulation
+### Multi-modal event analysis and social simulation✨
 
 **A lightweight system for turning event materials into structured graphs, agent populations, and inspectable social simulations.**
 
@@ -17,30 +17,35 @@
 
 </div>
 
-MicroWorld starts from raw event material: documents, images, videos, and graph-ready context. It builds an event graph, derives platform-facing agent profiles, runs a multi-agent discussion process, and keeps the intermediate artifacts available for inspection after the run.
+### 🕵️‍♂️ Overview
 
-It is built for cases where the final report is not enough on its own. The project keeps the graph, prompts, simulation inputs, action traces, memory states, and report outputs tied to the same run.
+**MicroWorld** starts from raw event material: 📄 documents, 🖼️ images, 🎥 videos, and 🕸️ graph-ready context. It builds an event graph, derives platform-facing agent profiles, runs a multi-agent discussion process, and keeps the intermediate artifacts available for inspection after the run!
+
+🎯 **Why MicroWorld?** It is built for cases where *the final report is not enough on its own*. The project keeps the graph 📊, prompts 💬, simulation inputs 🎬, action traces 👣, memory states 🧠, and report outputs 📑 tied to the same run.
 
 ## System Architecture
 
 <p align="center">
   <img src="Architecture.png" width="100%" alt="MicroWorld system architecture" />
 </p>
+## 🏛️ System Architecture
 
-MicroWorld is organized around four stages:
+MicroWorld is organized around four key stages:
 
-1. **Ingestion and graph build**: convert event materials into ontology, entities, and relations.
-2. **Simulation preparation**: derive topic keywords, cluster topology, and generate platform profiles.
-3. **Runtime execution**: run the topology-aware simulation with directional influence and lightweight memory.
-4. **Reporting and inspection**: collect logs, traces, configs, and reports from the same run.
+1. 📥 **Ingestion and graph build**: Convert event materials into ontology, entities, and relations.
+2. ⚙️ **Simulation preparation**: Derive topic keywords, cluster topology, and generate platform profiles.
+3. 🏃‍♂️ **Runtime execution**: Run the topology-aware simulation with directional influence and lightweight memory.
+4. 📈 **Reporting and inspection**: Collect logs, traces, configs, and reports from the same run.
 
-## Key Contributions
+## ✨Key Contributions
 
-- **Multi-modal event ingestion** for text, image, and video inputs, without forcing the pipeline into a text-only workflow.
-- **Two topology clustering modes**: a threshold-based mode and an LLM-keyword-driven mode.
-- **PPR-guided directional influence** for agent activation and information flow.
-- **Lightweight memory** that preserves useful state without requiring full-history replay.
-- **Inspectable outputs** across graph building, simulation preparation, runtime traces, and reporting.
+- 🎨 **Multi-modal event ingestion**: Handles text, image, and video inputs, without forcing the pipeline into a text-only workflow.
+- 🕸️ **Two topology clustering modes**: A threshold-based mode and an LLM-keyword-driven mode.
+- 🧭 **PPR-guided directional influence**: Smart agent activation and information flow mapping.
+- 🧠 **Lightweight memory**: Preserves useful state without requiring full-history replay.
+- 🔍 **Inspectable outputs**: Total transparency across graph building, simulation preparation, runtime traces, and reporting.
+
+> 💡 **Efficiency Boost**: Removes redundant updates and cuts token usage sharply as workloads grow. Keeps the simulation trajectory closer to the reference trend than the baseline run! 📉
 
 <table>
   <tr>
@@ -61,13 +66,13 @@ MicroWorld is organized around four stages:
   </tr>
 </table>
 
-## Example: LK-99
+## 🧪Example: LK-99
 
 The public example uses the LK-99 room-temperature-superconductor news cycle. It is a good fit for the project because it contains:
 
-- mixed evidence types, including long-form text and videos,
-- a clear shift from early excitement to later scrutiny,
-- visible changes in narrative focus, participants, and discussion structure.
+- 🧩 **Mixed evidence types**, including long-form text and videos.
+- 🎢 **A clear shift** from early excitement to later scrutiny.
+- 🗣️ **Visible changes** in narrative focus, participants, and discussion structure.
 
 <p align="center">
   <img src="docs/assets/lk99/pic1.png" width="48%" alt="LK-99 demonstration clip" />
@@ -77,73 +82,72 @@ The public example uses the LK-99 room-temperature-superconductor news cycle. It
   <img src="docs/assets/lk99/pic2.png" width="48%" alt="LK-99 annotated frame" />
   <img src="docs/assets/lk99/pic4.png" width="48%" alt="LK-99 materials figure strip" />
 </p>
+## 🚀 Quick Start
 
-## Quick Start
-
-### 1. Clone the repository
+### 1️⃣ Clone the repository
 
 ```bash
-git clone https://github.com/d2i-cuhksz/MicroWorld.git
+git clone [https://github.com/d2i-cuhksz/MicroWorld.git](https://github.com/d2i-cuhksz/MicroWorld.git)
 cd MicroWorld
 ```
 
-### 2. Prerequisites
+### 2️⃣ Prerequisites 🛠️
 
-Required:
+**Required:**
 
-- Python 3.11+
-- `uv`
+* 🐍 Python 3.11+
+* ⚡ `uv`
 
-Recommended for video inputs:
+**Recommended for video inputs:**
 
-- `ffmpeg`
-- `ffprobe`
+* 🎞️ `ffmpeg`
+* 🎞️ `ffprobe`
 
-If `ffmpeg` and `ffprobe` are not on your `PATH`, set `MULTIMODAL_FFMPEG_PATH` and `MULTIMODAL_FFPROBE_PATH` in `.env`.
+> *(If `ffmpeg` and `ffprobe` are not on your PATH, set `MULTIMODAL_FFMPEG_PATH` and `MULTIMODAL_FFPROBE_PATH` in `.env`)*
 
-### 3. Configure environment variables
+### 3️⃣ Configure environment variables 🔐
 
 ```bash
 cp .env.example .env
 ```
 
-Set at least:
+**Set at least:**
 
-```bash
+```env
 LLM_API_KEY=your_key
 ZEP_API_KEY=your_key
 ```
 
-Common defaults:
+**Common defaults:**
 
-```bash
-LLM_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+```env
+LLM_BASE_URL=[https://dashscope.aliyuncs.com/compatible-mode/v1](https://dashscope.aliyuncs.com/compatible-mode/v1)
 LLM_MODEL_NAME=qwen-plus
 MULTIMODAL_AUDIO_API_KEY=
 MULTIMODAL_AUDIO_BASE_URL=
 ```
 
-### 4. Install dependencies
+### 4️⃣ Install dependencies 📦
 
 ```bash
 uv sync
 ```
 
-### 5. Start the API service
+### 5️⃣ Start the API service 🔌
 
 ```bash
 uv run microworld-api
 ```
 
-The backend uses `FLASK_HOST`, `FLASK_PORT`, and `FLASK_DEBUG` from the environment. The default backend port is `5001`.
+> *(The backend uses `FLASK_HOST`, `FLASK_PORT`, and `FLASK_DEBUG` from the environment. The default backend port is **5001**.)*
 
-### 6. Create a run config
+### 6️⃣ Create a run config 📝
 
 ```bash
 cp configs/full_run/full_run.template.json /tmp/microworld-run.json
 ```
 
-Minimal example:
+**Minimal example:**
 
 ```json
 {
@@ -169,16 +173,16 @@ Minimal example:
 }
 ```
 
-You can also leave `files` empty and provide `files_from`, with one local path per line.
+> *(You can also leave `files` empty and provide `files_from`, with one local path per line.)*
 
-### 7. Run the full pipeline
+### 7️⃣ Run the full pipeline 🚂
 
 ```bash
 uv run microworld-full-run \
   --config /abs/path/to/microworld-run.json
 ```
 
-To avoid the interactive clustering choice:
+**To avoid the interactive clustering choice:**
 
 ```bash
 uv run microworld-full-run \
@@ -186,69 +190,79 @@ uv run microworld-full-run \
   --cluster-method threshold
 ```
 
-Generated data is written under:
+**Generated data is written under:** 📁
 
-```text
-data/generated/
-output/simulations/
-output/reports/
-runs/
-```
+* `data/generated/`
+* `output/simulations/`
+* `output/reports/`
+* `runs/`
 
-## Main Commands
+---
 
-```bash
-uv run microworld-api
-uv run microworld-local-pipeline --config /abs/path/to/local_pipeline.json
-uv run microworld-parallel-sim --config /abs/path/to/simulation_config.json
-uv run microworld-full-run --config /abs/path/to/microworld-run.json
-```
+## ⌨️ Main Commands
 
-## Outputs
+| Command                                            | Description                      |
+| -------------------------------------------------- | -------------------------------- |
+| `uv run microworld-api`                            | 🔌 Start the API backend          |
+| `uv run microworld-local-pipeline --config <path>` | 🔄 Run the local pipeline         |
+| `uv run microworld-parallel-sim --config <path>`   | 🏃‍♂️ Run parallel simulation       |
+| `uv run microworld-full-run --config <path>`       | 🌍 Run the entire MicroWorld flow |
+
+---
+
+## 📂 Outputs
 
 A typical run exposes artifacts from several stages:
 
-- **Project build**: extracted text, parsed multimodal content, source manifests, ontology output.
-- **Simulation preparation**: entity prompts, graph snapshots, social relation graph, simulation config.
-- **Runtime execution**: platform profiles, action logs, memory states, topology traces.
-- **Reporting**: report outline, full report, agent logs, console logs.
+* 🏗️ **Project build:** Extracted text, parsed multimodal content, source manifests, ontology output.
+* 🎭 **Simulation preparation:** Entity prompts, graph snapshots, social relation graph, simulation config.
+* 🎬 **Runtime execution:** Platform profiles, action logs, memory states, topology traces.
+* 📊 **Reporting:** Report outline, full report, agent logs, console logs.
 
-## Repository Structure
+---
+
+## 🌲 Repository Structure
 
 ```text
 MicroWorld/
-  pyproject.toml
-  src/
-    microworld/
-      api/
-      application/
-      cli/
-      config/
-      domain/
-      graph/
-      ingestion/
-      infrastructure/
-      memory/
-      reporting/
-      simulation/
-      storage/
-      telemetry/
-      tools/
-  configs/
-    full_run/
-    simulation/
-  data/
-    generated/
-  docs/
-  tests/
+├── 📄 pyproject.toml
+├── 📁 src/
+│   └── 📁 microworld/
+│       ├── 🔌 api/
+│       ├── 📱 application/
+│       ├── ⌨️ cli/
+│       ├── ⚙️ config/
+│       ├── 🧩 domain/
+│       ├── 🕸️ graph/
+│       ├── 📥 ingestion/
+│       ├── 🏗️ infrastructure/
+│       ├── 🧠 memory/
+│       ├── 📊 reporting/
+│       ├── 🏃 simulation/
+│       ├── 💾 storage/
+│       ├── 📡 telemetry/
+│       └── 🛠️ tools/
+├── 📁 configs/
+│   ├── 🏃 full_run/
+│   └── 🎬 simulation/
+├── 📁 data/
+│   └── 🏗️ generated/
+├── 📁 docs/
+└── 📁 tests/
 ```
 
-## Development
+---
+
+## 🧑‍💻 Development
+
+Want to contribute or run tests?
 
 ```bash
 uv sync --group dev
 uv run pytest
 ```
+
+---
 
 ## License
 
