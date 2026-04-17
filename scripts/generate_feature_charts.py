@@ -23,8 +23,8 @@ COLORS = {
     "teal": "#0f766e",
     "teal_soft": "#99f6e4",
     "ink": "#111827",
-    "white": "#ffffff",
-    "bg": "#f8fbff",
+    "white": "#f3f8f6",
+    "bg": "#eaf3f0",
 }
 
 

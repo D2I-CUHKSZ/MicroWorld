@@ -543,9 +543,17 @@ nav {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+.feature-proof-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  margin-top: 24px;
+}
+
 .info-card,
 .overview-card,
 .feature-card,
+.feature-proof-card,
 .landing-card,
 .detail-card,
 .step-card,
@@ -567,6 +575,7 @@ nav {
 .info-card,
 .overview-card,
 .feature-card,
+.feature-proof-card,
 .detail-card,
 .step-card,
 .deployment-card,
@@ -586,12 +595,14 @@ nav {
 
 .landing-card:hover,
 .overview-card:hover,
-.feature-card:hover {
+.feature-card:hover,
+.feature-proof-card:hover {
   transform: translateY(-3px);
   box-shadow: var(--shadow);
 }
 
 .feature-card,
+.feature-proof-card,
 .landing-card,
 .overview-card,
 .info-card,
@@ -606,6 +617,7 @@ nav {
 }
 
 .feature-card::before,
+.feature-proof-card::before,
 .landing-card::before,
 .overview-card::before,
 .info-card::before,
@@ -625,13 +637,15 @@ nav {
 }
 
 .landing-card:nth-child(2n)::before,
-.feature-card:nth-child(2n)::before {
+.feature-card:nth-child(2n)::before,
+.feature-proof-card:nth-child(2n)::before {
   background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.24), transparent);
 }
 
 .info-card h3,
 .overview-card h3,
 .feature-card h3,
+.feature-proof-card h3,
 .landing-card h3,
 .detail-card h3,
 .step-card h3,
@@ -648,6 +662,7 @@ nav {
 .info-card p,
 .overview-card p,
 .feature-card p,
+.feature-proof-card p,
 .landing-card p,
 .detail-card p,
 .step-card p,
@@ -715,6 +730,26 @@ nav {
   margin-top: 18px;
   color: var(--primary);
   font-weight: 600;
+}
+
+.feature-proof-card {
+  padding: 22px;
+}
+
+.feature-proof-desc {
+  margin-bottom: 14px;
+  min-height: 3.2em;
+}
+
+.feature-proof-image {
+  margin-top: 0;
+  padding: 10px;
+  background: rgba(221, 239, 234, 0.96);
+  border-color: rgba(45, 212, 191, 0.16);
+}
+
+.feature-proof-image img {
+  max-height: 360px;
 }
 
 .subpage-hero {
@@ -1647,6 +1682,7 @@ footer {
 @media (max-width: 1080px) {
   .hero-layout,
   .feature-grid,
+  .feature-proof-grid,
   .overview-grid,
   .landing-grid,
   .architecture-row,
@@ -1711,6 +1747,7 @@ footer {
   }
 
   .feature-grid,
+  .feature-proof-grid,
   .overview-grid,
   .landing-grid,
   .architecture-row,
