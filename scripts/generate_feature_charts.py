@@ -5,7 +5,6 @@ import os
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-from matplotlib import patheffects as pe
 from matplotlib.ticker import FuncFormatter
 
 
@@ -64,43 +63,55 @@ def save_token_chart(data: dict) -> None:
     )
 
     labels = [item["label"] for item in entries]
-    values = [item["token_save_pct"] for item in entries]
-    details = [
-        f"{format_tokens(item['base_tokens'])} -> {format_tokens(item['co_tokens'])}"
-        for item in entries
-    ]
+    saved_values = [item["token_save_pct"] for item in entries]
+    actual_values = [100 - value for value in saved_values]
+    details = [f"{format_tokens(item['co_tokens'])} used" for item in entries]
 
     fig, ax = base_figure()
     ax.barh(labels, [100] * len(labels), color=COLORS["track"], height=0.66)
-    bar_colors = [COLORS["orange"], COLORS["blue"], COLORS["blue"], COLORS["blue_soft"]]
-    bars = ax.barh(labels, values, color=bar_colors, height=0.66)
+    actual_bars = ax.barh(labels, actual_values, color=COLORS["blue"], height=0.66)
+    saved_bars = ax.barh(
+        labels,
+        saved_values,
+        left=actual_values,
+        color=COLORS["orange_soft"],
+        height=0.66,
+    )
     ax.invert_yaxis()
-    ax.set_xlim(0, 100)
-    ax.set_xlabel("Token reduction (%)", fontsize=16, color=COLORS["navy"], labelpad=10, fontweight="bold")
+    ax.set_xlim(0, 112)
+    ax.set_xticks([0, 25, 50, 75, 100])
+    ax.set_xlabel("Share of baseline token workload (%)", fontsize=16, color=COLORS["navy"], labelpad=10, fontweight="bold")
     ax.tick_params(axis="x", labelsize=13, colors=COLORS["navy"])
     ax.tick_params(axis="y", labelsize=16, colors=COLORS["ink"], length=0)
 
-    for bar, value, detail in zip(bars, values, details):
-        y = bar.get_y() + bar.get_height() / 2
+    for actual_bar, saved_bar, saved_value, detail in zip(actual_bars, saved_bars, saved_values, details):
+        y = saved_bar.get_y() + saved_bar.get_height() / 2
         ax.text(
-            value + 1.2,
+            103.5,
             y,
-            f"{value:.2f}%",
+            f"Saved {saved_value:.2f}%",
             va="center",
             ha="left",
             fontsize=15,
             color=COLORS["navy"],
             fontweight="bold",
         )
+        actual_width = actual_bar.get_width()
+        detail_x = actual_width / 2
+        detail_ha = "center"
+        detail_color = "#f8fbff"
+        if actual_width < 18:
+            detail_x = actual_width + 1.4
+            detail_ha = "left"
+            detail_color = COLORS["navy"]
         ax.text(
-            max(value - 1.2, 2),
+            detail_x,
             y,
             detail,
             va="center",
-            ha="right",
-            fontsize=12,
-            color="#f8fbff",
-            path_effects=[pe.withStroke(linewidth=0)],
+            ha=detail_ha,
+            fontsize=11,
+            color=detail_color,
         )
 
     out = ASSET_DIR / "feature_token_savings_bar.png"
