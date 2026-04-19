@@ -1350,6 +1350,10 @@ nav {
   font-size: 0.88rem;
   text-align: right;
   line-height: 1.35;
+  white-space: normal;
+}
+
+body[data-page="architecture"] .system-cockpit .board-list-row strong {
   white-space: nowrap;
 }
 
@@ -1728,10 +1732,12 @@ nav {
   border: 1px solid rgba(251, 191, 36, 0.28);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(255, 247, 237, 0.9));
   color: var(--text-secondary);
-  font-family: var(--mono);
-  font-size: 0.78rem;
-  letter-spacing: 0.05em;
+  font-family: var(--font);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .gallery-caption-grid {
@@ -2016,6 +2022,19 @@ nav {
   font-size: 1.7rem;
   line-height: 1;
   letter-spacing: -0.05em;
+}
+
+.metric-box .metric-heading {
+  font-family: var(--font);
+}
+
+.metric-box .metric-heading span:last-child {
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
 }
 
 .metric-box span {
