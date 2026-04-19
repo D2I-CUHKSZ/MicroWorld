@@ -33,7 +33,7 @@
       <nav>
         <div class="nav-inner">
           <a href="index.html" class="nav-brand" aria-label="MicroWorld home">
-            <span class="nav-brand-mark" aria-hidden="true">🌐</span>
+            <span class="nav-brand-mark" aria-hidden="true"><img class="nav-logo-image" src="./assets/logo.png" alt="" /></span>
             <span class="nav-brand-text">MicroWorld</span>
           </a>
           <ul class="nav-links">

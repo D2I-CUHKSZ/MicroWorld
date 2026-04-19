@@ -168,9 +168,18 @@ nav {
 }
 
 .nav-brand-mark {
-  font-size: 1.45rem;
-  line-height: 1;
-  filter: drop-shadow(0 1px 1px rgba(120, 53, 15, 0.12));
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 999px;
+  background: linear-gradient(165deg, rgba(255, 247, 237, 0.98), rgba(254, 215, 170, 0.72));
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  box-shadow:
+    0 8px 18px rgba(120, 53, 15, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
 }
 
 .nav-brand-text {
@@ -179,8 +188,13 @@ nav {
   color: var(--text);
 }
 
-.nav-brand > .nav-logo-image {
-  display: none !important;
+.nav-logo-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 18%;
+  mix-blend-mode: multiply;
+  transform: scale(1.08);
 }
 
 .nav-links {
@@ -374,6 +388,17 @@ nav {
 
 .hero-stat-box {
   min-height: 118px;
+}
+
+.hero-stat-box strong {
+  margin-bottom: 8px;
+  font-size: 1rem;
+  line-height: 1.3;
+  letter-spacing: normal;
+}
+
+.hero-stat-box .metric-heading {
+  font-family: var(--font);
 }
 
 .hero-chips {
@@ -1260,7 +1285,7 @@ nav {
   justify-content: center;
   min-width: 0;
   text-align: center;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .board-list {
@@ -1288,11 +1313,12 @@ nav {
 
 .board-list-row strong {
   display: block;
-  max-width: 28ch;
+  max-width: none;
   color: var(--text);
-  font-size: 0.96rem;
+  font-size: 0.88rem;
   text-align: right;
-  line-height: 1.5;
+  line-height: 1.35;
+  white-space: nowrap;
 }
 
 .status-grid {
@@ -2170,6 +2196,7 @@ footer {
   .board-list-row strong {
     max-width: none;
     text-align: left;
+    white-space: normal;
   }
 
   .hero,
