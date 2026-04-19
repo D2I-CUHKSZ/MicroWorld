@@ -265,6 +265,12 @@ uv run pytest
 
 ---
 
+## 🙏 Acknowledgements
+
+MicroWorld is built on top of prior open-source efforts. We would like to thank [MiroFish](https://github.com/666ghj/MiroFish) and [OASIS](https://github.com/camel-ai/oasis) for making their work publicly available. Our project extends and adapts ideas and implementation foundations from these repositories for a lightweight, topology-aware, multi-modal social simulation workflow.
+
+---
+
 ## License
 
 MicroWorld is released under the [GNU Affero General Public License v3.0](LICENSE).
