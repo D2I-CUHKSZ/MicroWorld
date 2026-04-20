@@ -41,45 +41,40 @@ MicroWorld is organized around four key stages:
 
 <table>
   <tr>
-    <td width="33.3%" valign="top" align="center">
+    <td width="20%" valign="top" align="center">
       <img src="docs/assets/readme-contributions/multimodal-ingestion.png" width="100%" alt="Multi-modal event ingestion" />
       <br />
       <strong>Multi-modal Event Ingestion</strong>
       <br />
-      <sub>Handles text, image, and video inputs in one workflow instead of collapsing the pipeline into text only.</sub>
+      <sub>Handles text, image, and video inputs in one unified workflow.</sub>
     </td>
-    <td width="33.3%" valign="top" align="center">
+    <td width="20%" valign="top" align="center">
       <img src="docs/assets/readme-contributions/topology-clustering.png" width="100%" alt="Two topology clustering modes" />
       <br />
       <strong>Two Topology Clustering Modes</strong>
       <br />
-      <sub>Supports both threshold-based clustering and an LLM-keyword-driven clustering mode for topology-aware scheduling.</sub>
+      <sub>Supports both threshold-based and LLM-keyword-driven clustering.</sub>
     </td>
-    <td width="33.3%" valign="top" align="center">
+    <td width="20%" valign="top" align="center">
       <img src="docs/assets/readme-contributions/ppr-influence.png" width="100%" alt="PPR-guided directional influence" />
       <br />
       <strong>PPR-guided Directional Influence</strong>
       <br />
-      <sub>Models activation and information flow with topology-aware directional influence instead of flat pairwise assumptions.</sub>
+      <sub>Models activation and information flow with topology-aware influence.</sub>
     </td>
-  </tr>
-</table>
-
-<table>
-  <tr>
-    <td width="50%" valign="top" align="center">
+    <td width="20%" valign="top" align="center">
       <img src="docs/assets/readme-contributions/lightweight-memory.png" width="100%" alt="Lightweight memory" />
       <br />
       <strong>Lightweight Memory</strong>
       <br />
-      <sub>Preserves useful state incrementally without requiring full-history replay at each simulation step.</sub>
+      <sub>Preserves useful state incrementally without full-history replay.</sub>
     </td>
-    <td width="50%" valign="top" align="center">
+    <td width="20%" valign="top" align="center">
       <img src="docs/assets/readme-contributions/inspectable-outputs.png" width="100%" alt="Inspectable outputs" />
       <br />
       <strong>Inspectable Outputs</strong>
       <br />
-      <sub>Keeps graph artifacts, simulation traces, configs, and reports available for inspection after each run.</sub>
+      <sub>Keeps graph artifacts, traces, configs, and reports available for inspection.</sub>
     </td>
   </tr>
 </table>
