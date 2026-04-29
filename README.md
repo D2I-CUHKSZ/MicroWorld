@@ -309,11 +309,11 @@ MicroWorld is built on top of prior open-source efforts. We would like to thank 
 If this repository is useful for your work, please cite our survey project.
 
 ```bibtex
-@article{agentskills2026,
-  title   = {Topology-Aware LLM-Driven Social Simulation: A Unified Framework for Efficient and Realistic Agent Dynamics},
-  author  = {Anonymous},
-  year    = {2026},
-  note    = {Manuscript in preparation}
+@article{xu2026topology,
+  title={Topology-Aware LLM-Driven Social Simulation: A Unified Framework for Efficient and Realistic Agent Dynamics},
+  author={Xu, Yuwei and Zhang, Shulun and Zhou, Yingli and Zeng, Shipei and Lakshmanan, Laks VS and Ma, Chenhao},
+  journal={arXiv preprint arXiv:2604.18011},
+  year={2026}
 }
 ```
 
