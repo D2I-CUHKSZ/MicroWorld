@@ -26,7 +26,7 @@
 ## 🏛️ System Architecture
 
 <p align="center">
-  <img src="Architecture.png" width="100%" alt="MicroWorld system architecture" />
+  <img src="docs/assets/paper-figures/framework.png" width="100%" alt="MicroWorld graph-structured simulation framework" />
 </p>
 
 
